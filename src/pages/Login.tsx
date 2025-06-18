@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,14 +19,15 @@ const Login = () => {
     // TODO: Implement actual login logic here
     console.log('Login attempt:', { email, password });
     
-    // Simulate API call
+    // Simulate API call and redirect to dashboard
     setTimeout(() => {
       setIsLoading(false);
+      navigate('/dashboard');
     }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-green-50 flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-green-50 flex items-center justify-center px-6 py-12 font-poppins">
       <div className="w-full max-w-md">
         {/* Logo and Welcome */}
         <div className="text-center mb-8">
@@ -35,17 +37,17 @@ const Login = () => {
               alt="WellNest Logo" 
               className="w-12 h-12 object-contain"
             />
-            <span className="text-2xl font-bold text-purple-800">WellNest</span>
+            <span className="text-2xl font-bold text-primary font-poppins">WellNest</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
-          <p className="text-gray-600">Sign in to your account to continue your wellness journey</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 font-poppins">Welcome back</h1>
+          <p className="text-gray-600 font-poppins">Sign in to your account to continue your wellness journey</p>
         </div>
 
         {/* Login Form */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">
+              <Label htmlFor="email" className="text-gray-700 font-medium font-poppins">
                 Email Address
               </Label>
               <div className="relative">
@@ -56,14 +58,14 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="pl-10 h-12 border-gray-300 focus:border-purple-400 focus:ring-purple-400"
+                  className="pl-10 h-12 border-gray-300 focus:border-purple-400 focus:ring-purple-400 font-poppins"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 font-medium">
+              <Label htmlFor="password" className="text-gray-700 font-medium font-poppins">
                 Password
               </Label>
               <div className="relative">
@@ -74,7 +76,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="pl-10 h-12 border-gray-300 focus:border-purple-400 focus:ring-purple-400"
+                  className="pl-10 h-12 border-gray-300 focus:border-purple-400 focus:ring-purple-400 font-poppins"
                   required
                 />
               </div>
@@ -83,7 +85,7 @@ const Login = () => {
             <div className="flex items-center justify-between">
               <Link 
                 to="/forgot-password" 
-                className="text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors"
+                className="text-sm text-primary hover:text-purple-800 font-medium transition-colors font-poppins"
               >
                 Forgot password?
               </Link>
@@ -92,7 +94,7 @@ const Login = () => {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105"
+              className="w-full h-12 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 font-poppins"
               style={{
                 background: 'linear-gradient(90deg, #9ED9C1 2.88%, #B0A8B9 66.35%)',
               }}
@@ -112,11 +114,11 @@ const Login = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 font-poppins">
               Don't have an account?{' '}
               <Link 
                 to="/signup" 
-                className="text-purple-600 hover:text-purple-800 font-medium transition-colors"
+                className="text-primary hover:text-purple-800 font-medium transition-colors"
               >
                 Sign up now
               </Link>
@@ -128,7 +130,7 @@ const Login = () => {
         <div className="text-center mt-6">
           <Link 
             to="/" 
-            className="text-gray-600 hover:text-purple-600 font-medium transition-colors"
+            className="text-gray-600 hover:text-primary font-medium transition-colors font-poppins"
           >
             ← Back to Home
           </Link>
