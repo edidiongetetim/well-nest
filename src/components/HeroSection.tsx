@@ -29,53 +29,14 @@ const HeroSection = () => {
           </Button>
         </div>
 
-        {/* Right Content - Illustration */}
+        {/* Right Content - Logo */}
         <div className="relative">
-          <div className="relative z-10">
-            {/* Purple circular background with baby illustration */}
-            <div className="w-80 h-80 mx-auto relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full"></div>
-              
-              {/* Baby illustration placeholder */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-48 bg-purple-200 rounded-full flex items-center justify-center">
-                  <svg width="120" height="120" viewBox="0 0 120 120" className="text-purple-600">
-                    <circle cx="60" cy="45" r="25" fill="currentColor" opacity="0.3"/>
-                    <ellipse cx="60" cy="75" rx="35" ry="30" fill="currentColor" opacity="0.3"/>
-                    <circle cx="52" cy="40" r="2" fill="currentColor"/>
-                    <circle cx="68" cy="40" r="2" fill="currentColor"/>
-                    <path d="M55 48 Q60 52 65 48" stroke="currentColor" strokeWidth="2" fill="none"/>
-                  </svg>
-                </div>
-              </div>
-              
-              {/* Sparkles */}
-              <div className="absolute -top-4 -right-4 w-6 h-6 text-purple-400">
-                <svg fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0l3.09 6.91L22 9l-6.91 2.09L12 18l-3.09-6.91L2 9l6.91-2.09L12 0z"/>
-                </svg>
-              </div>
-              <div className="absolute top-8 -left-6 w-4 h-4 text-purple-300">
-                <svg fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0l3.09 6.91L22 9l-6.91 2.09L12 18l-3.09-6.91L2 9l6.91-2.09L12 0z"/>
-                </svg>
-              </div>
-              <div className="absolute -bottom-2 right-8 w-5 h-5 text-purple-300">
-                <svg fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0l3.09 6.91L22 9l-6.91 2.09L12 18l-3.09-6.91L2 9l6.91-2.09L12 0z"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-          
-          {/* WELLNEST branding */}
-          <div className="absolute bottom-0 right-0 text-right">
-            <div className="text-6xl font-bold text-purple-800 leading-none">
-              WELLNEST
-            </div>
-            <div className="text-lg text-gray-600 font-medium tracking-wider">
-              BIRTH & BEYOND
-            </div>
+          <div className="relative z-10 flex justify-center items-center">
+            <img 
+              src="/lovable-uploads/91d2546c-bdfa-484f-989a-fb228fba05f8.png" 
+              alt="WellNest - Birth & Beyond" 
+              className="w-96 h-96 object-contain"
+            />
           </div>
           
           {/* Background decorative shapes */}
