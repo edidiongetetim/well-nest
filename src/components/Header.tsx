@@ -18,15 +18,15 @@ const Header = () => {
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-purple-800 font-medium hover:text-purple-600 transition-colors">
+            <Link to="/" className="text-purple-800 font-medium hover:text-purple-600 transition-colors">
               Home
-            </a>
-            <a href="#" className="text-gray-600 font-medium hover:text-purple-600 transition-colors">
+            </Link>
+            <Link to="/services" className="text-gray-600 font-medium hover:text-purple-600 transition-colors">
               Services
-            </a>
-            <a href="#" className="text-gray-600 font-medium hover:text-purple-600 transition-colors">
+            </Link>
+            <Link to="/about" className="text-gray-600 font-medium hover:text-purple-600 transition-colors">
               About
-            </a>
+            </Link>
             <Link to="/login">
               <Button variant="outline" className="border-purple-200 text-purple-800 hover:bg-purple-50">
                 Login/SignUp
