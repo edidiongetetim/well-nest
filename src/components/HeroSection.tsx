@@ -35,7 +35,7 @@ const HeroSection = () => {
             <img 
               src="/lovable-uploads/91d2546c-bdfa-484f-989a-fb228fba05f8.png" 
               alt="WellNest - Birth & Beyond" 
-              className="w-96 h-96 object-contain"
+              className="w-[500px] h-[500px] object-contain"
             />
           </div>
           

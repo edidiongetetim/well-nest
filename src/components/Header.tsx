@@ -10,8 +10,10 @@ const Header = () => {
             <img 
               src="/lovable-uploads/91d2546c-bdfa-484f-989a-fb228fba05f8.png" 
               alt="WellNest Logo" 
-              className="w-12 h-12 object-contain"
+              className="w-16 h-16 object-contain object-left"
+              style={{ objectPosition: 'left center' }}
             />
+            <span className="text-2xl font-bold text-purple-800">WellNest</span>
           </div>
           
           <div className="hidden md:flex items-center gap-8">
