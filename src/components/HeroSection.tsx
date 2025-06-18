@@ -21,12 +21,15 @@ const HeroSection = () => {
             </p>
           </div>
           
-          <Button 
-            size="lg" 
-            className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+          <button 
+            className="w-72 h-24 text-white text-lg font-semibold rounded-[9px] border border-[#7E7474] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            style={{
+              background: 'linear-gradient(90deg, #9ED9C1 2.88%, #B0A8B9 66.35%)',
+              borderWidth: '0.9px'
+            }}
           >
             Get Started
-          </Button>
+          </button>
         </div>
 
         {/* Right Content - Logo */}
