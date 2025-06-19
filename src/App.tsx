@@ -14,6 +14,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Health from "./pages/Health";
 import Mental from "./pages/Mental";
+import HealthCheckIn from "./pages/HealthCheckIn";
+import MentalCheckIn from "./pages/MentalCheckIn";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,7 +36,9 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/health" element={<Health />} />
+          <Route path="/health-check-in" element={<HealthCheckIn />} />
           <Route path="/mental" element={<Mental />} />
+          <Route path="/mental-check-in" element={<MentalCheckIn />} />
           <Route path="/community" element={<Dashboard />} />
           <Route path="/ai-chatbot" element={<Dashboard />} />
           <Route path="/settings" element={<Dashboard />} />

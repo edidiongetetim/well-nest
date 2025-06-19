@@ -3,8 +3,15 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Mental = () => {
+  const navigate = useNavigate();
+
+  const handleStartTest = () => {
+    navigate('/mental-check-in');
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -34,6 +41,7 @@ const Mental = () => {
                 </div>
                 
                 <Button 
+                  onClick={handleStartTest}
                   className="px-12 py-6 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                   style={{
                     background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
