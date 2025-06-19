@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import MobileNav from "./MobileNav";
 
 const Header = () => {
   return (
@@ -17,6 +18,7 @@ const Header = () => {
             <span className="text-2xl font-bold text-purple-800">WellNest</span>
           </Link>
           
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-purple-800 font-medium hover:text-purple-600 transition-colors">
               Home
@@ -33,6 +35,9 @@ const Header = () => {
               </Button>
             </Link>
           </div>
+
+          {/* Mobile Navigation */}
+          <MobileNav />
         </div>
       </nav>
     </header>
