@@ -4,11 +4,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { LogIn, Mail, Lock } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ const Login = () => {
     setIsLoading(true);
     
     // TODO: Implement actual login logic here
-    console.log('Login attempt:', { email, password });
+    console.log('Login attempt:', { email, password, rememberMe });
     
     // Simulate API call and redirect to dashboard
     setTimeout(() => {
@@ -83,6 +85,19 @@ const Login = () => {
             </div>
 
             <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remember" 
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                />
+                <Label 
+                  htmlFor="remember" 
+                  className="text-sm text-gray-700 font-medium font-poppins cursor-pointer"
+                >
+                  Remember me
+                </Label>
+              </div>
               <Link 
                 to="/forgot-password" 
                 className="text-sm text-primary hover:text-purple-800 font-medium transition-colors font-poppins"

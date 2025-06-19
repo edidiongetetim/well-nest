@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +15,7 @@ const SignUp = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,9 +52,10 @@ const SignUp = () => {
     // TODO: Implement actual signup logic here
     console.log('Signup attempt:', formData);
     
-    // Simulate API call
+    // Simulate API call and redirect to success page
     setTimeout(() => {
       setIsLoading(false);
+      navigate('/signup-success');
     }, 1000);
   };
 

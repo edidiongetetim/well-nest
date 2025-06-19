@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -21,15 +22,17 @@ const HeroSection = () => {
             </p>
           </div>
           
-          <button 
-            className="w-72 h-24 text-white text-lg font-semibold rounded-[9px] border border-[#7E7474] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-            style={{
-              background: 'linear-gradient(90deg, #9ED9C1 2.88%, #B0A8B9 66.35%)',
-              borderWidth: '0.9px'
-            }}
-          >
-            Get Started
-          </button>
+          <Link to="/signup">
+            <button 
+              className="w-72 h-24 text-white text-lg font-semibold rounded-[9px] border border-[#7E7474] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              style={{
+                background: 'linear-gradient(90deg, #9ED9C1 2.88%, #B0A8B9 66.35%)',
+                borderWidth: '0.9px'
+              }}
+            >
+              Get Started
+            </button>
+          </Link>
         </div>
 
         {/* Right Content - Logo */}
