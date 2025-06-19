@@ -12,6 +12,8 @@ import SignUp from "./pages/SignUp";
 import SignUpSuccess from "./pages/SignUpSuccess";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
+import Health from "./pages/Health";
+import Mental from "./pages/Mental";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,8 +33,8 @@ const App = () => (
           <Route path="/signup-success" element={<SignUpSuccess />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/health" element={<Dashboard />} />
-          <Route path="/mental" element={<Dashboard />} />
+          <Route path="/health" element={<Health />} />
+          <Route path="/mental" element={<Mental />} />
           <Route path="/community" element={<Dashboard />} />
           <Route path="/ai-chatbot" element={<Dashboard />} />
           <Route path="/settings" element={<Dashboard />} />
