@@ -92,13 +92,13 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Footer with Return to Home Link */}
+              {/* Footer with Return to Main Site Link */}
               <div className="text-center pt-8 pb-4">
                 <Link 
                   to="/" 
                   className="font-poppins text-gray-400 hover:text-purple-600 font-medium transition-colors"
                 >
-                  ← Return to Home
+                  ← Return to Main Site
                 </Link>
               </div>
             </div>
