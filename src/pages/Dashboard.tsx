@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -7,6 +6,7 @@ import { PregnancyTracker } from "@/components/PregnancyTracker";
 import { EnhancedReminderCard } from "@/components/EnhancedReminderCard";
 import { MeditationCard } from "@/components/MeditationCard";
 import { DynamicGreeting } from "@/components/DynamicGreeting";
+import { BabyMilestoneCard } from "@/components/BabyMilestoneCard";
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
@@ -45,14 +45,7 @@ const Dashboard = () => {
                         </p>
                       </div>
                       
-                      <div className="text-center">
-                        <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center mb-4">
-                          <span className="text-4xl">👶</span>
-                        </div>
-                        <p className="font-poppins text-sm text-gray-600">
-                          Your baby is in a size of: <span className="font-semibold">Apple 🍏</span>
-                        </p>
-                      </div>
+                      <BabyMilestoneCard />
                     </div>
                   </div>
                 </div>

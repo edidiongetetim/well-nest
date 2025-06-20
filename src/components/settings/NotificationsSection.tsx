@@ -53,7 +53,7 @@ export const NotificationsSection = ({
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="font-poppins font-medium">Nessie Chatbot Responses</Label>
+              <Label className="font-poppins font-medium">Nestie Chatbot Responses</Label>
               <p className="font-poppins text-sm text-gray-600">
                 Receive notifications from your AI companion
               </p>
