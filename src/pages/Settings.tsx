@@ -53,7 +53,19 @@ export default function Settings() {
 
       if (profileData) {
         setPhoneNumber(profileData.phone_number || "");
-        // Load other preferences from profile if they exist
+        
+        // Load notification preferences
+        const notificationPrefs = profileData.notification_preferences as any || {};
+        setReminderAlerts(notificationPrefs.reminder_alerts ?? true);
+        setChatbotResponses(notificationPrefs.chatbot_responses ?? true);
+        setCommunityUpdates(notificationPrefs.community_updates ?? true);
+        setReminderSchedule(notificationPrefs.reminder_schedule || "1hr");
+
+        // Load app preferences
+        const appPrefs = profileData.app_preferences as any || {};
+        setTheme(appPrefs.theme || "light");
+        setLanguage(appPrefs.language || "en");
+        setUnits(appPrefs.units || "metric");
       }
     } catch (error) {
       console.error('Error loading preferences:', error);

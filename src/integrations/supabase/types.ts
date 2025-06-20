@@ -11,30 +11,39 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          app_preferences: Json | null
           avatar_type: string | null
           avatar_url: string | null
           created_at: string
           first_name: string | null
           id: string
           last_name: string | null
+          notification_preferences: Json | null
+          phone_number: string | null
           updated_at: string
         }
         Insert: {
+          app_preferences?: Json | null
           avatar_type?: string | null
           avatar_url?: string | null
           created_at?: string
           first_name?: string | null
           id: string
           last_name?: string | null
+          notification_preferences?: Json | null
+          phone_number?: string | null
           updated_at?: string
         }
         Update: {
+          app_preferences?: Json | null
           avatar_type?: string | null
           avatar_url?: string | null
           created_at?: string
           first_name?: string | null
           id?: string
           last_name?: string | null
+          notification_preferences?: Json | null
+          phone_number?: string | null
           updated_at?: string
         }
         Relationships: []
