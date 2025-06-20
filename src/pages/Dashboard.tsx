@@ -7,6 +7,7 @@ import { PregnancyTracker } from "@/components/PregnancyTracker";
 import { EnhancedReminderCard } from "@/components/EnhancedReminderCard";
 import { MeditationCard } from "@/components/MeditationCard";
 import { DynamicGreeting } from "@/components/DynamicGreeting";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   return (
@@ -81,7 +82,7 @@ const Dashboard = () => {
               </div>
 
               {/* Bottom Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <MeditationCard />
                 
                 <div className="flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -89,6 +90,16 @@ const Dashboard = () => {
                     "Your body is amazing. Rest is productive."
                   </p>
                 </div>
+              </div>
+
+              {/* Footer with Return to Home Link */}
+              <div className="text-center pt-8 pb-4">
+                <Link 
+                  to="/" 
+                  className="font-poppins text-gray-400 hover:text-purple-600 font-medium transition-colors"
+                >
+                  ← Return to Home
+                </Link>
               </div>
             </div>
           </main>
