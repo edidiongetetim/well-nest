@@ -20,6 +20,7 @@ import MentalCheckIn from "./pages/MentalCheckIn";
 import EditProfile from "./pages/EditProfile";
 import VirtualCompanion from "./pages/VirtualCompanion";
 import Community from "./pages/Community";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,7 +48,7 @@ const App = () => (
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/community" element={<Community />} />
             <Route path="/ai-chatbot" element={<VirtualCompanion />} />
-            <Route path="/settings" element={<Dashboard />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
