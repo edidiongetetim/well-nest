@@ -1,5 +1,6 @@
 
 import Header from "@/components/Header";
+import { Link } from "react-router-dom";
 
 const Services = () => {
   const services = [
@@ -72,9 +73,11 @@ const Services = () => {
           <p className="font-poppins text-gray-700 mb-6">
             Join thousands of expecting parents who trust WellNest for their pregnancy and postpartum support.
           </p>
-          <button className="bg-purple-600 hover:bg-purple-700 text-white font-poppins font-medium px-8 py-3 rounded-full transition-colors">
-            Get Started Today
-          </button>
+          <Link to="/signup">
+            <button className="bg-purple-600 hover:bg-purple-700 text-white font-poppins font-medium px-8 py-3 rounded-full transition-colors">
+              Get Started Today
+            </button>
+          </Link>
         </div>
       </main>
     </div>
