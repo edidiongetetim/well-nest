@@ -4,8 +4,9 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { HealthCard } from "@/components/HealthCard";
 import { PregnancyTracker } from "@/components/PregnancyTracker";
-import { ReminderCard } from "@/components/ReminderCard";
+import { EnhancedReminderCard } from "@/components/EnhancedReminderCard";
 import { MeditationCard } from "@/components/MeditationCard";
+import { DynamicGreeting } from "@/components/DynamicGreeting";
 
 const Dashboard = () => {
   return (
@@ -20,9 +21,7 @@ const Dashboard = () => {
             <div className="max-w-7xl mx-auto space-y-6">
               {/* Welcome Section */}
               <div className="mb-8">
-                <h1 className="font-poppins font-bold text-4xl text-primary mb-2">
-                  Good Morning, Saja!
-                </h1>
+                <DynamicGreeting />
                 <p className="font-poppins text-gray-600 mb-4">
                   Your Personalized Mental Health Dashboard
                 </p>
@@ -78,7 +77,7 @@ const Dashboard = () => {
                   variant="warning"
                 />
                 
-                <ReminderCard />
+                <EnhancedReminderCard />
               </div>
 
               {/* Bottom Section */}

@@ -1,7 +1,7 @@
 
 import { Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ProfileDropdown } from "./ProfileDropdown";
 
 export function DashboardHeader() {
   return (
@@ -24,13 +24,7 @@ export function DashboardHeader() {
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></span>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src="/placeholder.svg" alt="Saja Abufarha" />
-              <AvatarFallback className="bg-primary text-white font-poppins">SA</AvatarFallback>
-            </Avatar>
-            <span className="font-poppins font-medium text-gray-700">Saja Abufarha</span>
-          </div>
+          <ProfileDropdown />
         </div>
       </div>
     </header>
