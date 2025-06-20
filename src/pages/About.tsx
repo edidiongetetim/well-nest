@@ -3,11 +3,11 @@ import Header from "@/components/Header";
 
 const About = () => {
   const teamMembers = [
-    { name: "Name Surname", role: "Frontend Developer" },
-    { name: "Name Surname", role: "Backend Developer" },
-    { name: "Name Surname", role: "UI/UX Designer" },
-    { name: "Name Surname", role: "Product Manager" },
-    { name: "Name Surname", role: "Data Scientist" },
+    { name: "Busayo Osossanwo"},
+    { name: "Edidiong Okon"},
+    { name: "Nusrat Jahan"},
+    { name: "Saja Abufarha"},
+    { name: "Yuechun Wei"}
   ];
 
   return (
@@ -40,9 +40,6 @@ const About = () => {
                 <h3 className="font-poppins font-semibold text-purple-800 mb-2">
                   {member.name}
                 </h3>
-                <p className="font-poppins text-sm text-gray-600">
-                  {member.role}
-                </p>
               </div>
             ))}
           </div>
