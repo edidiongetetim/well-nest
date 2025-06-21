@@ -24,7 +24,7 @@ const Health = () => {
             <div className="max-w-4xl mx-auto">
               {/* Page Title */}
               <div className="mb-8">
-                <h1 className="font-poppins font-bold text-4xl text-centre mb-8">
+                <h1 className="font-poppins font-bold text-3xl text-primary mb-8">
                   Let’s Take a Moment for Your Body
                 </h1>
               </div>
