@@ -32,10 +32,10 @@ const Mental = () => {
               {/* Center Content */}
               <div className="flex flex-col items-center justify-center min-h-[400px] space-y-8">
                 <div className="text-center max-w-3xl space-y-4">
-                  <p className="font-poppins text-xl text-center text-purple-700 leading-relaxed" max-w-2xl}>
+                  <p className="font-poppins text-xl text-center text-purple-700 leading-relaxed max-w-2xl">
                     This short questionnaire is designed to gently check in with your emotional wellbeing over the past 7 days.
                   </p>
-                  <p className="font-poppins text-xl text-center text-purple-700 leading-relaxed" max-w-2xl}>
+                  <p className="font-poppins text-xl text-center text-purple-700 leading-relaxed max-w-2xl">
                     It takes about 2 minutes. Your responses are private.
                   </p>
                 </div>
@@ -53,9 +53,8 @@ const Mental = () => {
                 </Button>
 
                 <p className="text-sm text-gray-500 mt-4">
-  This survey is for informational purposes only and does not replace professional medical advice.
+                  This survey is for informational purposes only and does not replace professional medical advice.
                 </p>
-
               </div>
             </div>
           </main>
