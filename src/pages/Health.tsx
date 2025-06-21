@@ -24,15 +24,15 @@ const Health = () => {
             <div className="max-w-4xl mx-auto">
               {/* Page Title */}
               <div className="mb-8">
-                <h1 className="font-poppins font-bold text-3xl text-primary mb-8">
-                  Welcome to the Physical Health Check-In
+                <h1 className="font-poppins font-bold text-4xl text-centre mb-8">
+                  Let’s Take a Moment for Your Body
                 </h1>
               </div>
 
               {/* Center Content */}
               <div className="flex flex-col items-center justify-center min-h-[400px] space-y-8">
                 <p className="font-poppins text-xl text-center text-purple-700 max-w-2xl leading-relaxed">
-                  Log a few quick details to better understand how your body is doing today.
+                  Take a few moments to reflect on your physical wellbeing. This check-in helps you understand how your body is doing and if you may want to seek extra support.
                 </p>
                 
                 <Button 
@@ -43,8 +43,12 @@ const Health = () => {
                     border: 'none'
                   }}
                 >
-                  Start Test
+                  Begin Check-In
                 </Button>
+
+                <p className="text-sm text-gray-500 mt-4">
+  This survey is for informational purposes only and does not replace professional medical advice.
+</p>
               </div>
             </div>
           </main>

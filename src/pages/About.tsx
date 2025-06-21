@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 
 const About = () => {
   const teamMembers = [
-    { name: "Busayo Osossanwo"},
+    { name: "Busayo Ososanwo"},
     { name: "Edidiong Okon"},
     { name: "Nusrat Jahan"},
     { name: "Saja Abufarha"},

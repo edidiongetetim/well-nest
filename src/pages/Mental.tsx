@@ -49,8 +49,13 @@ const Mental = () => {
                     color: '#5B3673'
                   }}
                 >
-                  Start Test
+                  Start survey
                 </Button>
+
+                <p className="text-sm text-gray-500 mt-4">
+  This survey is for informational purposes only and does not replace professional medical advice.
+                </p>
+
               </div>
             </div>
           </main>
