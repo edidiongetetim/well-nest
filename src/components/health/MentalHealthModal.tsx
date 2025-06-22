@@ -177,17 +177,17 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     setLoading(true);
 
     try {
-      // Convert responses to array of integers
+      // Convert responses to array of integers in question order
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
 
-      // Send data to external EPDS API
+      // Send data to external EPDS API with correct payload format
       const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          responses: responsesArray,
+          responses: responsesArray
         }),
       });
 
@@ -222,15 +222,14 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       setShowConfirmation(true);
 
       toast({
-        title: "Mental Health Check-In Complete!",
+        title: "✅ Assessment Complete!",
         description: "Your EPDS assessment has been completed and analyzed.",
       });
 
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error processing your assessment",
-        description: "Please try again later.",
+        title: "Could not process your assessment. Please check your answers and try again.",
         variant: "destructive",
       });
     } finally {
@@ -253,7 +252,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-poppins text-2xl text-primary text-center">
-              Mental Health Assessment Complete!
+              ✅ Assessment Complete!
             </DialogTitle>
           </DialogHeader>
           

@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -15,6 +16,7 @@ const MentalCheckIn = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [epdsResult, setEpdsResult] = useState<{epds_score: number; risk_level: string} | null>(null);
 
   const questions = [
     {
@@ -119,15 +121,6 @@ const MentalCheckIn = () => {
     }
   ];
 
-  const calculateEPDSScore = (responses: Record<string, string>) => {
-    // Simple EPDS scoring - in a real app, you'd want more sophisticated scoring
-    let score = 0;
-    Object.values(responses).forEach(response => {
-      score += parseInt(response) || 0;
-    });
-    return score;
-  };
-
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({
       ...prev,
@@ -170,13 +163,34 @@ const MentalCheckIn = () => {
     setLoading(true);
 
     try {
-      const epdsScore = calculateEPDSScore(responses);
+      // Convert responses to array of integers in question order
+      const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
 
+      // Send data to external EPDS API with correct payload format
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          responses: responsesArray
+        }),
+      });
+
+      if (!epdsResponse.ok) {
+        throw new Error('Failed to get EPDS analysis from external service');
+      }
+
+      const epdsData = await epdsResponse.json();
+      console.log('EPDS response:', epdsData);
+
+      // Store in Supabase with EPDS result
       const { error } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsScore,
+          epds_score: epdsData.epds_score,
+          risk_level: epdsData.risk_level,
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
@@ -190,13 +204,19 @@ const MentalCheckIn = () => {
         return;
       }
 
+      setEpdsResult(epdsData);
       console.log('Mental health responses submitted successfully');
       setShowConfirmation(true);
+
+      toast({
+        title: "✅ Assessment Complete!",
+        description: "Your EPDS assessment has been completed and analyzed.",
+      });
+
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error saving your check-in",
-        description: "Please try again later.",
+        title: "Could not process your assessment. Please check your answers and try again.",
         variant: "destructive",
       });
     } finally {
@@ -208,19 +228,20 @@ const MentalCheckIn = () => {
     setShowConfirmation(false);
     setResponses({});
     setUnansweredQuestions([]);
+    setEpdsResult(null);
   };
 
   const getSummaryData = () => {
     const totalQuestions = questions.length;
     const answeredQuestions = Object.keys(responses).length;
     const completionRate = Math.round((answeredQuestions / totalQuestions) * 100);
-    const epdsScore = calculateEPDSScore(responses);
     
     return {
       'Total Questions': totalQuestions.toString(),
       'Questions Answered': answeredQuestions.toString(),
       'Completion Rate': `${completionRate}%`,
-      'EPDS Score': epdsScore.toString(),
+      'EPDS Score': epdsResult?.epds_score?.toString() || 'Processing...',
+      'Risk Level': epdsResult?.risk_level || 'Processing...',
       'Survey Type': 'EPDS Mental Health Check-in'
     };
   };
@@ -236,7 +257,7 @@ const MentalCheckIn = () => {
           <main className="flex-1 p-6">
             {showConfirmation ? (
               <ConfirmationScreen
-                title="Mental Health Check-In Complete!"
+                title="✅ Assessment Complete!"
                 summary={getSummaryData()}
                 onTakeAgain={handleTakeAgain}
               />
@@ -333,7 +354,7 @@ const MentalCheckIn = () => {
                         color: '#5B3673'
                       }}
                     >
-                      {loading ? 'Saving...' : 'Submit'}
+                      {loading ? 'Analyzing...' : 'Submit'}
                     </Button>
                   </div>
                 </form>
