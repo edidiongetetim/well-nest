@@ -13,15 +13,13 @@ export function BabyMilestoneCard() {
         
         {/* Main circular milestone card */}
         <div className="relative mx-auto w-48 h-48 bg-gradient-to-br from-purple-100 to-lavender-100 rounded-full shadow-md mb-4 flex items-center justify-center">
-          {/* Baby silhouette on the left */}
+          {/* Baby-in-womb illustration on the left */}
           <div className="absolute left-8 top-1/2 transform -translate-y-1/2">
-            <div className="w-16 h-20 bg-gradient-to-b from-purple-200 to-purple-300 rounded-full relative">
-              {/* Simple baby silhouette using CSS shapes */}
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-purple-400 rounded-full"></div>
-              <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-8 h-10 bg-purple-400 rounded-full"></div>
-              <div className="absolute bottom-2 left-2 w-3 h-6 bg-purple-400 rounded-full transform rotate-12"></div>
-              <div className="absolute bottom-2 right-2 w-3 h-6 bg-purple-400 rounded-full transform -rotate-12"></div>
-            </div>
+            <img 
+              src="/lovable-uploads/7c881c4b-e41b-4a07-b50c-79817db01079.png" 
+              alt="Baby in womb illustration" 
+              className="w-16 h-20 object-contain"
+            />
           </div>
           
           {/* Fruit icon on the right */}
