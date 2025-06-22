@@ -34,6 +34,7 @@ const flowerAvatars = {
 
 export function ProfileDropdown() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +52,27 @@ export function ProfileDropdown() {
       
       if (profileData) {
         setProfile(profileData);
+        
+        // If there's an avatar_url, create a fresh signed URL
+        if (profileData.avatar_url) {
+          try {
+            // Extract the file path from the existing URL
+            const url = new URL(profileData.avatar_url);
+            const pathSegments = url.pathname.split('/');
+            const filePath = pathSegments.slice(-3).join('/'); // Get avatars/{userId}/{filename}
+            
+            const { data: signedUrlData } = await supabase.storage
+              .from('imagebuckets')
+              .createSignedUrl(filePath, 60 * 60 * 24); // 24 hour expiry
+            
+            if (signedUrlData) {
+              setAvatarUrl(signedUrlData.signedUrl);
+            }
+          } catch (error) {
+            console.error('Error creating signed URL:', error);
+            setAvatarUrl(null);
+          }
+        }
       }
     }
   };
@@ -68,8 +90,8 @@ export function ProfileDropdown() {
   };
 
   const getAvatarDisplay = () => {
-    if (profile?.avatar_url) {
-      return profile.avatar_url;
+    if (avatarUrl) {
+      return avatarUrl;
     }
     return flowerAvatars[profile?.avatar_type as keyof typeof flowerAvatars] || flowerAvatars.flower1;
   };
@@ -79,8 +101,8 @@ export function ProfileDropdown() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-3 p-2 h-auto">
           <Avatar className="w-8 h-8">
-            {profile?.avatar_url ? (
-              <AvatarImage src={profile.avatar_url} alt={getDisplayName()} />
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt={getDisplayName()} />
             ) : (
               <AvatarFallback className="bg-primary text-white font-poppins text-lg">
                 {getAvatarDisplay()}

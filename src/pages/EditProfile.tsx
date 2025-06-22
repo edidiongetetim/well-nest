@@ -97,21 +97,10 @@ const EditProfile = () => {
     }
   };
 
+  // This function is now handled within PersonalInfoSection
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !profile) return;
-
-    setLoading(true);
-    try {
-      toast({
-        title: "Image upload",
-        description: "Image upload feature requires storage bucket setup.",
-      });
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    } finally {
-      setLoading(false);
-    }
+    // This is kept for compatibility but the actual logic is in PersonalInfoSection
+    console.log('Image upload triggered from EditProfile');
   };
 
   return (
