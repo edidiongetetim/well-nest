@@ -1,8 +1,13 @@
 
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 
 interface HealthSnapshotSectionProps {
   bloodPressure: string;
@@ -14,6 +19,21 @@ interface HealthSnapshotSectionProps {
   epdsScore: string;
 }
 
+interface PhysicalHealthRecord {
+  id: string;
+  blood_pressure: string | null;
+  heartbeat: string | null;
+  systolic: string | null;
+  diastolic: string | null;
+  created_at: string;
+}
+
+interface MentalHealthRecord {
+  id: string;
+  epds_score: number | null;
+  created_at: string;
+}
+
 export const HealthSnapshotSection = ({
   bloodPressure,
   setBloodPressure,
@@ -23,59 +43,178 @@ export const HealthSnapshotSection = ({
   setGlucose,
   epdsScore
 }: HealthSnapshotSectionProps) => {
+  const [physicalRecord, setPhysicalRecord] = useState<PhysicalHealthRecord | null>(null);
+  const [mentalRecord, setMentalRecord] = useState<MentalHealthRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchHealthData();
+  }, []);
+
+  const fetchHealthData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch most recent physical health record
+      const { data: physicalData } = await supabase
+        .from('physical_health_checkins')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Fetch most recent mental health record
+      const { data: mentalData } = await supabase
+        .from('mental_health_checkins')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      setPhysicalRecord(physicalData);
+      setMentalRecord(mentalData);
+    } catch (error) {
+      console.error('Error fetching health data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRiskLevel = (score: number | null) => {
+    if (!score) return { level: "Unknown", color: "text-gray-500" };
+    if (score <= 9) return { level: "Low Risk", color: "text-green-600" };
+    if (score <= 12) return { level: "Moderate Risk", color: "text-yellow-600" };
+    return { level: "High Risk", color: "text-red-500" };
+  };
+
+  const formatBloodPressure = (systolic: string | null, diastolic: string | null, bloodPressure: string | null) => {
+    if (systolic && diastolic) {
+      return `${systolic}/${diastolic} mmHg`;
+    }
+    return bloodPressure || "Not recorded";
+  };
+
+  if (loading) {
+    return (
+      <Card className="bg-white shadow-sm border border-gray-100">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
+          <CardTitle className="font-poppins text-xl text-primary">Health Snapshot</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="animate-pulse">Loading health data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="bg-white shadow-sm border border-gray-100">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
         <CardTitle className="font-poppins text-xl text-primary">Health Snapshot</CardTitle>
       </CardHeader>
-      <CardContent className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="bloodPressure" className="font-poppins font-medium">Blood Pressure</Label>
-            <Input
-              id="bloodPressure"
-              value={bloodPressure}
-              onChange={(e) => setBloodPressure(e.target.value)}
-              placeholder="120/80"
-              className="font-poppins"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="heartRate" className="font-poppins font-medium">Heart Rate (BPM)</Label>
-            <Input
-              id="heartRate"
-              value={heartRate}
-              onChange={(e) => setHeartRate(e.target.value)}
-              placeholder="75"
-              className="font-poppins"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="glucose" className="font-poppins font-medium">Glucose Level</Label>
-            <Input
-              id="glucose"
-              value={glucose}
-              onChange={(e) => setGlucose(e.target.value)}
-              placeholder="90 mg/dL"
-              className="font-poppins"
-            />
-          </div>
-        </div>
+      <CardContent className="p-6">
+        <Tabs defaultValue="physical" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="physical" className="font-poppins">Physical</TabsTrigger>
+            <TabsTrigger value="mental" className="font-poppins">Mental</TabsTrigger>
+          </TabsList>
 
-        <div className="bg-lavender-50 p-4 rounded-lg">
-          <h3 className="font-poppins font-semibold text-gray-800 mb-2">Mental Health Status</h3>
-          <p className="font-poppins text-sm text-gray-600 mb-3">
-            Last EPDS Score: {epdsScore || "Not taken yet"}
-          </p>
-          <div className="flex gap-3">
-            <Button variant="outline" className="font-poppins">
-              Update Vitals
-            </Button>
-            <Button variant="outline" className="font-poppins">
-              Retake Survey
-            </Button>
-          </div>
-        </div>
+          <TabsContent value="physical" className="space-y-4">
+            {physicalRecord ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <Label className="font-poppins font-semibold text-gray-700">Blood Pressure</Label>
+                    <p className="font-poppins text-lg text-gray-900">
+                      {formatBloodPressure(physicalRecord.systolic, physicalRecord.diastolic, physicalRecord.blood_pressure)}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <Label className="font-poppins font-semibold text-gray-700">Heart Rate</Label>
+                    <p className="font-poppins text-lg text-gray-900">
+                      {physicalRecord.heartbeat ? `${physicalRecord.heartbeat} BPM` : "Not recorded"}
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <Label className="font-poppins font-semibold text-gray-700">Glucose Level</Label>
+                    <p className="font-poppins text-lg text-gray-900">Not recorded</p>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="font-poppins text-sm text-gray-500 mb-3">
+                    Last updated: {format(new Date(physicalRecord.created_at), 'MMMM d, yyyy')}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/health-check-in')}
+                    className="font-poppins"
+                  >
+                    Update Vitals
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="font-poppins text-gray-600 mb-4">
+                  You haven't submitted your vitals yet.
+                </p>
+                <Button 
+                  onClick={() => navigate('/health-check-in')}
+                  className="font-poppins bg-primary hover:bg-primary/90"
+                >
+                  Add Your Vitals
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="mental" className="space-y-4">
+            {mentalRecord && mentalRecord.epds_score !== null ? (
+              <div className="space-y-4">
+                <div className="bg-lavender-50 p-6 rounded-lg text-center">
+                  <Label className="font-poppins font-semibold text-gray-700">EPDS Score & Risk Level</Label>
+                  <div className="mt-2">
+                    <span className="font-poppins text-2xl font-bold text-gray-900">
+                      Score: {mentalRecord.epds_score}
+                    </span>
+                    <span className="mx-2">–</span>
+                    <span className={`font-poppins text-lg font-semibold ${getRiskLevel(mentalRecord.epds_score).color}`}>
+                      {getRiskLevel(mentalRecord.epds_score).level}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="font-poppins text-sm text-gray-500 mb-3">
+                    Last taken: {format(new Date(mentalRecord.created_at), 'MMMM d, yyyy')}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/mental-check-in')}
+                    className="font-poppins"
+                  >
+                    Retake Survey
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="font-poppins text-gray-600 mb-4">
+                  You haven't taken the mental health survey yet.
+                </p>
+                <Button 
+                  onClick={() => navigate('/mental-check-in')}
+                  className="font-poppins bg-primary hover:bg-primary/90"
+                >
+                  Take Survey Now
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
