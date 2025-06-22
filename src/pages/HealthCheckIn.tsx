@@ -139,6 +139,8 @@ const HealthCheckIn = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    
     if (!validateForm()) {
       toast({
         title: "Please complete all required fields to continue.",
@@ -153,44 +155,65 @@ const HealthCheckIn = () => {
     setLoading(true);
 
     try {
-      // Send data to external prediction API with correct payload format
+      console.log('Sending API request to prediction service...');
+      
+      // Prepare the payload for the API
+      const apiPayload = {
+        age: parseInt(formData.age),
+        SystolicBP: parseInt(formData.systolic),
+        DiastolicBP: parseInt(formData.diastolic),
+        BS: parseInt(formData.bloodSugar),
+        BodyTemp: parseFloat(formData.bodyTemperature),
+        HeartRate: parseInt(formData.heartbeat)
+      };
+      
+      console.log('API payload:', apiPayload);
+
+      // Send data to external prediction API
       const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          age: parseInt(formData.age),
-          SystolicBP: parseInt(formData.systolic),
-          DiastolicBP: parseInt(formData.diastolic),
-          BS: parseInt(formData.bloodSugar),
-          BodyTemp: parseFloat(formData.bodyTemperature),
-          HeartRate: parseInt(formData.heartbeat)
-        }),
+        body: JSON.stringify(apiPayload),
       });
 
+      console.log('API response status:', predictionResponse.status);
+
       if (!predictionResponse.ok) {
-        throw new Error('Failed to get prediction from external service');
+        const errorText = await predictionResponse.text();
+        console.error('API error response:', errorText);
+        throw new Error(`API request failed with status: ${predictionResponse.status} - ${errorText}`);
       }
 
       const predictionData: PredictionResponse = await predictionResponse.json();
       console.log('Prediction response:', predictionData);
 
-      // Store in Supabase with prediction result
+      // Store in Supabase - using existing column structure
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id);
+
+      const dbPayload = {
+        age: formData.age,
+        systolic: formData.systolic,
+        diastolic: formData.diastolic,
+        heartbeat: formData.heartbeat,
+        prediction_result: predictionData.prediction || predictionData.risk_level || null,
+        risk_level: predictionData.risk_level || predictionData.prediction || null,
+        user_id: user?.id,
+        // Store blood sugar and body temp in the blood_pressure field as JSON for now
+        blood_pressure: JSON.stringify({
+          bloodSugar: formData.bloodSugar,
+          bodyTemperature: formData.bodyTemperature
+        })
+      };
+
+      console.log('Database payload:', dbPayload);
+
       const { error } = await supabase
         .from('physical_health_checkins')
-        .insert({
-          age: formData.age,
-          systolic: formData.systolic,
-          diastolic: formData.diastolic,
-          heartbeat: formData.heartbeat,
-          blood_sugar: formData.bloodSugar,
-          body_temperature: formData.bodyTemperature,
-          prediction_result: predictionData.prediction || predictionData.risk_level,
-          risk_level: predictionData.risk_level || predictionData.prediction,
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        });
+        .insert(dbPayload);
 
       if (error) {
         console.error('Error saving health data:', error);
@@ -215,6 +238,7 @@ const HealthCheckIn = () => {
       console.error('Error:', error);
       toast({
         title: "There was an issue analyzing your health data. Please try again.",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
     } finally {
