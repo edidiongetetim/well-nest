@@ -1,50 +1,58 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Activity } from "lucide-react";
+import { useState } from "react";
+import { HealthCheckInModal } from "./health/HealthCheckInModal";
 
-interface HealthCardProps {
-  title: string;
-  riskLevel: "Low Risk" | "Medium Risk" | "High Risk";
-  description: string;
-  variant?: "success" | "warning" | "danger";
-}
-
-export function HealthCard({ title, riskLevel, description, variant = "success" }: HealthCardProps) {
-  const getBadgeColor = () => {
-    switch (variant) {
-      case "success":
-        return "bg-green-100 text-green-700 hover:bg-green-100";
-      case "warning":
-        return "bg-purple-100 text-purple-700 hover:bg-purple-100";
-      case "danger":
-        return "bg-red-100 text-red-700 hover:bg-red-100";
-      default:
-        return "bg-gray-100 text-gray-700 hover:bg-gray-100";
-    }
-  };
+export const HealthCard = () => {
+  const [showModal, setShowModal] = useState(false);
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-100">
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <div className="flex justify-between items-start">
-            <h3 className="font-poppins font-semibold text-gray-900">{title}</h3>
-            <Badge className={`${getBadgeColor()} font-poppins text-xs`}>
-              {riskLevel}
-            </Badge>
+    <>
+      <Card className="bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
+          <div className="flex items-center gap-3">
+            <Activity className="w-8 h-8 text-blue-500" />
+            <div>
+              <CardTitle className="font-poppins text-xl text-primary">
+                Log Your Vitals
+              </CardTitle>
+              <CardDescription className="font-poppins text-gray-600 mt-2">
+                Quickly record your age, blood pressure, heartbeat, and other key vitals to get personalized health insights.
+              </CardDescription>
+            </div>
           </div>
-          
-          <p className="font-poppins text-sm text-gray-600">{description}</p>
-          
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span className="font-poppins text-xs text-gray-500">
-              {variant === "success" ? "Based on age, BP, heart rate, sugar level" : "Based on EPDS test results"}
-            </span>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <p className="font-poppins text-gray-700">
+                Track your physical wellness and vital signs to maintain optimal health during your pregnancy journey.
+              </p>
+              <p className="font-poppins text-sm text-gray-500">
+                Takes about 3 minutes to complete
+              </p>
+            </div>
+            <Button 
+              onClick={() => setShowModal(true)}
+              className="ml-6 px-8 py-3 font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              style={{
+                background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
+                border: 'none',
+                color: '#5B3673'
+              }}
+            >
+              Start Check-In
+            </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <HealthCheckInModal 
+        open={showModal} 
+        onOpenChange={setShowModal}
+      />
+    </>
   );
-}
+};

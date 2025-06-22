@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Brain, Heart, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { HealthHistorySection } from "@/components/health/HealthHistorySection";
+import { MentalHealthModal } from "@/components/health/MentalHealthModal";
+import { useState } from "react";
 
 const Mental = () => {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <SidebarProvider>
@@ -56,7 +59,7 @@ const Mental = () => {
                       </p>
                     </div>
                     <Button 
-                      onClick={() => navigate('/mental-check-in')}
+                      onClick={() => setShowModal(true)}
                       className="ml-6 px-8 py-3 font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                       style={{
                         background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
@@ -121,6 +124,11 @@ const Mental = () => {
           </main>
         </div>
       </div>
+
+      <MentalHealthModal 
+        open={showModal} 
+        onOpenChange={setShowModal}
+      />
     </SidebarProvider>
   );
 };
