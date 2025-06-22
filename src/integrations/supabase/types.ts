@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      mental_health_checkins: {
+        Row: {
+          created_at: string
+          epds_score: number | null
+          id: string
+          responses: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          epds_score?: number | null
+          id?: string
+          responses?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          epds_score?: number | null
+          id?: string
+          responses?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      physical_health_checkins: {
+        Row: {
+          age: string | null
+          blood_pressure: string | null
+          created_at: string
+          diastolic: string | null
+          heartbeat: string | null
+          id: string
+          systolic: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: string | null
+          blood_pressure?: string | null
+          created_at?: string
+          diastolic?: string | null
+          heartbeat?: string | null
+          id?: string
+          systolic?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: string | null
+          blood_pressure?: string | null
+          created_at?: string
+          diastolic?: string | null
+          heartbeat?: string | null
+          id?: string
+          systolic?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           app_preferences: Json | null

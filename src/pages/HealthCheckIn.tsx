@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -7,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ConfirmationScreen } from "@/components/ConfirmationScreen";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const HealthCheckIn = () => {
   const { toast } = useToast();
@@ -27,6 +27,7 @@ const HealthCheckIn = () => {
   });
 
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const validateField = (field: string, value: string) => {
     if (!value.trim()) {
@@ -121,7 +122,7 @@ const HealthCheckIn = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -135,8 +136,42 @@ const HealthCheckIn = () => {
       return;
     }
 
-    console.log('Physical health data submitted:', formData);
-    setShowConfirmation(true);
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('physical_health_checkins')
+        .insert({
+          age: formData.age,
+          systolic: formData.systolic,
+          diastolic: formData.diastolic,
+          heartbeat: formData.heartbeat,
+          blood_pressure: formData.bloodPressure,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        });
+
+      if (error) {
+        console.error('Error saving health data:', error);
+        toast({
+          title: "Error saving your check-in",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Physical health data submitted successfully');
+      setShowConfirmation(true);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error saving your check-in",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTakeAgain = () => {
@@ -327,14 +362,15 @@ const HealthCheckIn = () => {
                   <div className="flex justify-center pt-8">
                     <Button 
                       type="submit"
-                      className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                      disabled={loading}
+                      className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                       style={{
                         background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
                         border: 'none',
                         color: '#5B3673'
                       }}
                     >
-                      Submit
+                      {loading ? 'Saving...' : 'Submit'}
                     </Button>
                   </div>
                 </form>

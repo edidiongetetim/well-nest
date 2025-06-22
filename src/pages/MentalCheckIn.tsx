@@ -7,12 +7,14 @@ import { useState } from "react";
 import { ConfirmationScreen } from "@/components/ConfirmationScreen";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const MentalCheckIn = () => {
   const { toast } = useToast();
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const questions = [
     {
@@ -117,6 +119,15 @@ const MentalCheckIn = () => {
     }
   ];
 
+  const calculateEPDSScore = (responses: Record<string, string>) => {
+    // Simple EPDS scoring - in a real app, you'd want more sophisticated scoring
+    let score = 0;
+    Object.values(responses).forEach(response => {
+      score += parseInt(response) || 0;
+    });
+    return score;
+  };
+
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({
       ...prev,
@@ -142,7 +153,7 @@ const MentalCheckIn = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -156,8 +167,41 @@ const MentalCheckIn = () => {
       return;
     }
 
-    console.log('Mental health responses submitted:', responses);
-    setShowConfirmation(true);
+    setLoading(true);
+
+    try {
+      const epdsScore = calculateEPDSScore(responses);
+
+      const { error } = await supabase
+        .from('mental_health_checkins')
+        .insert({
+          responses,
+          epds_score: epdsScore,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        });
+
+      if (error) {
+        console.error('Error saving mental health data:', error);
+        toast({
+          title: "Error saving your check-in",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Mental health responses submitted successfully');
+      setShowConfirmation(true);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error saving your check-in",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTakeAgain = () => {
@@ -170,11 +214,13 @@ const MentalCheckIn = () => {
     const totalQuestions = questions.length;
     const answeredQuestions = Object.keys(responses).length;
     const completionRate = Math.round((answeredQuestions / totalQuestions) * 100);
+    const epdsScore = calculateEPDSScore(responses);
     
     return {
       'Total Questions': totalQuestions.toString(),
       'Questions Answered': answeredQuestions.toString(),
       'Completion Rate': `${completionRate}%`,
+      'EPDS Score': epdsScore.toString(),
       'Survey Type': 'EPDS Mental Health Check-in'
     };
   };
@@ -279,14 +325,15 @@ const MentalCheckIn = () => {
                   <div className="flex justify-center pt-8 pb-12">
                     <Button 
                       type="submit"
-                      className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                      disabled={loading}
+                      className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                       style={{
                         background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
                         border: 'none',
                         color: '#5B3673'
                       }}
                     >
-                      Submit
+                      {loading ? 'Saving...' : 'Submit'}
                     </Button>
                   </div>
                 </form>
