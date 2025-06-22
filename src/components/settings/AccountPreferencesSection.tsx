@@ -1,7 +1,6 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AccountPreferencesSectionProps {
@@ -23,9 +22,7 @@ export const AccountPreferencesSection = ({
   newPassword,
   setNewPassword,
   confirmPassword,
-  setConfirmPassword,
-  onExportData,
-  onDeleteAccount
+  setConfirmPassword
 }: AccountPreferencesSectionProps) => {
   return (
     <Card className="bg-white shadow-sm border border-gray-100 animate-fade-in">
@@ -80,26 +77,6 @@ export const AccountPreferencesSection = ({
                 className="font-poppins"
               />
             </div>
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-gray-100">
-          <h3 className="font-poppins font-semibold text-gray-800 mb-4">Data Management</h3>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              variant="outline"
-              onClick={onExportData}
-              className="font-poppins"
-            >
-              Export My Data
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={onDeleteAccount}
-              className="font-poppins"
-            >
-              Delete My Account
-            </Button>
           </div>
         </div>
       </CardContent>
