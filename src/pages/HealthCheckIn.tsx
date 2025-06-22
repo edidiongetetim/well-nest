@@ -150,13 +150,14 @@ const HealthCheckIn = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           age: parseInt(formData.age),
           SystolicBP: parseInt(formData.systolic),
           DiastolicBP: parseInt(formData.diastolic),
-          BS: 90,
-          BodyTemp: 98.6,
+          BS: 0,
+          BodyTemp: 0,
           HeartRate: parseInt(formData.heartbeat)
         }),
       });
@@ -204,7 +205,7 @@ const HealthCheckIn = () => {
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Something went wrong while analyzing your vitals. Please try again later.",
+        title: "There was an issue analyzing your health data. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -267,14 +268,16 @@ const HealthCheckIn = () => {
                   </p>
                 </div>
 
-                {/* Risk Level Result */}
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border mb-8">
-                  <h3 className="font-poppins font-semibold text-lg text-primary mb-2">
-                    Health Risk Assessment
+                {/* Pregnancy Risk Prediction Result */}
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border border-purple-200 mb-8">
+                  <h3 className="font-poppins font-semibold text-lg text-primary mb-3">
+                    Pregnancy Risk Prediction
                   </h3>
-                  <p className="font-poppins text-2xl font-bold" style={{ color: '#5B3673' }}>
-                    {predictionResult?.prediction || predictionResult?.risk_level || 'Assessment Complete'}
-                  </p>
+                  <div className="bg-white p-4 rounded-lg border-2 border-purple-300">
+                    <p className="font-poppins text-2xl font-bold text-purple-700">
+                      {predictionResult?.prediction || predictionResult?.risk_level || 'Assessment Complete'}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Summary */}
