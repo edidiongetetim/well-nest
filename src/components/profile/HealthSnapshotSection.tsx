@@ -25,12 +25,15 @@ interface PhysicalHealthRecord {
   heartbeat: string | null;
   systolic: string | null;
   diastolic: string | null;
+  prediction_result: string | null;
+  risk_level: string | null;
   created_at: string;
 }
 
 interface MentalHealthRecord {
   id: string;
   epds_score: number | null;
+  risk_level: string | null;
   created_at: string;
 }
 
@@ -84,11 +87,13 @@ export const HealthSnapshotSection = ({
     }
   };
 
-  const getRiskLevel = (score: number | null) => {
-    if (!score) return { level: "Unknown", color: "text-gray-500" };
-    if (score <= 9) return { level: "Low Risk", color: "text-green-600" };
-    if (score <= 12) return { level: "Moderate Risk", color: "text-yellow-600" };
-    return { level: "High Risk", color: "text-red-500" };
+  const getRiskLevelColor = (riskLevel: string | null) => {
+    if (!riskLevel) return "text-gray-500";
+    const level = riskLevel.toLowerCase();
+    if (level.includes('low')) return 'text-green-600';
+    if (level.includes('moderate')) return 'text-yellow-600';
+    if (level.includes('high')) return 'text-red-500';
+    return 'text-gray-600';
   };
 
   const formatBloodPressure = (systolic: string | null, diastolic: string | null, bloodPressure: string | null) => {
@@ -144,6 +149,17 @@ export const HealthSnapshotSection = ({
                     <p className="font-poppins text-lg text-gray-900">Not recorded</p>
                   </div>
                 </div>
+
+                {/* Health Risk Assessment */}
+                {(physicalRecord.prediction_result || physicalRecord.risk_level) && (
+                  <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-4 rounded-lg border">
+                    <Label className="font-poppins font-semibold text-gray-700">Health Risk Assessment</Label>
+                    <p className={`font-poppins text-lg font-semibold ${getRiskLevelColor(physicalRecord.risk_level || physicalRecord.prediction_result)}`}>
+                      {physicalRecord.prediction_result || physicalRecord.risk_level}
+                    </p>
+                  </div>
+                )}
+
                 <div className="text-center">
                   <p className="font-poppins text-sm text-gray-500 mb-3">
                     Last updated: {format(new Date(physicalRecord.created_at), 'MMMM d, yyyy')}
@@ -181,10 +197,14 @@ export const HealthSnapshotSection = ({
                     <span className="font-poppins text-2xl font-bold text-gray-900">
                       Score: {mentalRecord.epds_score}
                     </span>
-                    <span className="mx-2">–</span>
-                    <span className={`font-poppins text-lg font-semibold ${getRiskLevel(mentalRecord.epds_score).color}`}>
-                      {getRiskLevel(mentalRecord.epds_score).level}
-                    </span>
+                    {mentalRecord.risk_level && (
+                      <>
+                        <span className="mx-2">–</span>
+                        <span className={`font-poppins text-lg font-semibold ${getRiskLevelColor(mentalRecord.risk_level)}`}>
+                          {mentalRecord.risk_level}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="text-center">

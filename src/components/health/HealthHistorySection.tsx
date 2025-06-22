@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,11 +69,14 @@ export const HealthHistorySection = ({ type }: HealthHistorySectionProps) => {
 
   const getSummary = (record: any) => {
     if (type === 'physical') {
-      return `Blood Pressure: ${record.systolic}/${record.diastolic} mmHg • Heart Rate: ${record.heartbeat} bpm`;
+      const vitals = `Blood Pressure: ${record.systolic}/${record.diastolic} mmHg • Heart Rate: ${record.heartbeat} bpm`;
+      const riskAssessment = record.prediction_result || record.risk_level;
+      return riskAssessment ? `${vitals} • Risk: ${riskAssessment}` : vitals;
     } else {
       const score = record.epds_score ? `EPDS Score: ${record.epds_score}` : 'EPDS Assessment';
       const responseCount = record.responses ? Object.keys(record.responses).length : 0;
-      return `${score} • ${responseCount} questions answered`;
+      const riskLevel = record.risk_level ? ` • Risk: ${record.risk_level}` : '';
+      return `${score} • ${responseCount} questions answered${riskLevel}`;
     }
   };
 

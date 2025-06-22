@@ -15,6 +15,7 @@ export type Database = {
           epds_score: number | null
           id: string
           responses: Json
+          risk_level: string | null
           updated_at: string
           user_id: string
         }
@@ -23,6 +24,7 @@ export type Database = {
           epds_score?: number | null
           id?: string
           responses?: Json
+          risk_level?: string | null
           updated_at?: string
           user_id: string
         }
@@ -31,6 +33,7 @@ export type Database = {
           epds_score?: number | null
           id?: string
           responses?: Json
+          risk_level?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -44,6 +47,8 @@ export type Database = {
           diastolic: string | null
           heartbeat: string | null
           id: string
+          prediction_result: string | null
+          risk_level: string | null
           systolic: string | null
           updated_at: string
           user_id: string
@@ -55,6 +60,8 @@ export type Database = {
           diastolic?: string | null
           heartbeat?: string | null
           id?: string
+          prediction_result?: string | null
+          risk_level?: string | null
           systolic?: string | null
           updated_at?: string
           user_id: string
@@ -66,6 +73,8 @@ export type Database = {
           diastolic?: string | null
           heartbeat?: string | null
           id?: string
+          prediction_result?: string | null
+          risk_level?: string | null
           systolic?: string | null
           updated_at?: string
           user_id?: string
