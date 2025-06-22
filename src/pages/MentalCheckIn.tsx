@@ -162,14 +162,19 @@ const MentalCheckIn = () => {
     setLoading(true);
 
     try {
-      console.log('Sending EPDS assessment to API...');
+      console.log('Starting EPDS assessment...');
+      console.log('Current responses:', responses);
       
       // Convert responses to array of integers in question order
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
       console.log('Responses array for API:', responsesArray);
 
+      // Updated API endpoint to match documentation
+      const apiUrl = 'https://wellnest-51u4.onrender.com/epds_score';
+      console.log('Making request to:', apiUrl);
+
       // Send data to EPDS API with correct headers and payload
-      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
+      const epdsResponse = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,37 +183,64 @@ const MentalCheckIn = () => {
         body: JSON.stringify({
           responses: responsesArray
         }),
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(30000) // 30 second timeout
       });
 
-      console.log('EPDS API response status:', epdsResponse.status);
+      console.log('EPDS API response received:', {
+        status: epdsResponse.status,
+        statusText: epdsResponse.statusText,
+        headers: Object.fromEntries(epdsResponse.headers.entries())
+      });
 
       if (!epdsResponse.ok) {
-        const errorText = await epdsResponse.text();
-        console.error('EPDS API error:', errorText);
-        throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
+        let errorMessage = `EPDS API request failed with status: ${epdsResponse.status}`;
+        try {
+          const errorText = await epdsResponse.text();
+          console.error('EPDS API error response body:', errorText);
+          errorMessage += ` - ${errorText}`;
+        } catch (parseError) {
+          console.error('Could not parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
-      const epdsData = await epdsResponse.json();
-      console.log('EPDS response:', epdsData);
+      let epdsData: {epds_score: number; risk_level: string};
+      try {
+        epdsData = await epdsResponse.json();
+        console.log('Parsed EPDS response:', epdsData);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error('Invalid JSON response from EPDS API');
+      }
+
+      // Validate response structure
+      if (typeof epdsData.epds_score !== 'number' || typeof epdsData.risk_level !== 'string') {
+        console.error('Invalid response structure:', epdsData);
+        throw new Error('Invalid response structure from EPDS API');
+      }
 
       // Store in Supabase with EPDS result
+      console.log('Saving to database...');
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id);
+
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
           epds_score: epdsData.epds_score,
           risk_level: epdsData.risk_level,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user.id
         });
 
       if (error) {
         console.error('Error saving mental health data:', error);
-        toast({
-          title: "Error saving your check-in",
-          description: "Please try again later.",
-          variant: "destructive",
-        });
-        return;
+        throw new Error(`Database error: ${error.message}`);
       }
 
       setEpdsResult(epdsData);
@@ -221,9 +253,27 @@ const MentalCheckIn = () => {
       });
 
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Complete error details:', error);
+      
+      let userMessage = "There was an issue processing the mental health check-in. Please try again.";
+      let description = "";
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          userMessage = "Request timed out. Please check your internet connection and try again.";
+        } else if (error.message.includes('fetch')) {
+          userMessage = "Network error. Please check your internet connection.";
+        } else if (error.message.includes('JSON')) {
+          userMessage = "Server returned invalid data. Please try again later.";
+        } else if (error.message.includes('API request failed')) {
+          userMessage = "The mental health assessment service is currently unavailable. Please try again later.";
+        }
+        description = error.message;
+      }
+      
       toast({
-        title: "There was an issue processing the mental health check-in. Please try again.",
+        title: userMessage,
+        description: description,
         variant: "destructive",
       });
     } finally {

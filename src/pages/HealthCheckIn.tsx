@@ -154,7 +154,7 @@ const HealthCheckIn = () => {
     setLoading(true);
 
     try {
-      console.log('Starting API request...');
+      console.log('Starting physical health prediction...');
       
       // Prepare the payload for the API - ensuring all values are numbers
       const apiPayload = {
@@ -174,9 +174,12 @@ const HealthCheckIn = () => {
         throw new Error('Invalid numeric values in form data');
       }
 
+      // Updated API endpoint to match documentation
+      const apiUrl = 'https://wellnest-51u4.onrender.com/predict';
+      console.log('Making request to:', apiUrl);
+
       // Send data to external prediction API with better error handling
-      console.log('Sending request to prediction API...');
-      const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
+      const predictionResponse = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +197,7 @@ const HealthCheckIn = () => {
       });
 
       if (!predictionResponse.ok) {
-        let errorMessage = `API request failed with status: ${predictionResponse.status}`;
+        let errorMessage = `Physical health API request failed with status: ${predictionResponse.status}`;
         try {
           const errorText = await predictionResponse.text();
           console.error('API error response body:', errorText);
@@ -212,6 +215,12 @@ const HealthCheckIn = () => {
       } catch (parseError) {
         console.error('Failed to parse JSON response:', parseError);
         throw new Error('Invalid JSON response from prediction API');
+      }
+
+      // Validate response structure
+      if (!predictionData.prediction && !predictionData.risk_level) {
+        console.error('Invalid response structure:', predictionData);
+        throw new Error('Invalid response structure from prediction API');
       }
 
       // Store in Supabase
@@ -271,6 +280,8 @@ const HealthCheckIn = () => {
           userMessage = "Network error. Please check your internet connection.";
         } else if (error.message.includes('JSON')) {
           userMessage = "Server returned invalid data. Please try again later.";
+        } else if (error.message.includes('API request failed')) {
+          userMessage = "The health prediction service is currently unavailable. Please try again later.";
         }
         description = error.message;
       }
