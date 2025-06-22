@@ -1,7 +1,8 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { HealthCard } from "@/components/HealthCard";
+import { HealthSummaryCard } from "@/components/HealthSummaryCard";
 import { PregnancyTracker } from "@/components/PregnancyTracker";
 import { EnhancedReminderCard } from "@/components/EnhancedReminderCard";
 import { MeditationCard } from "@/components/MeditationCard";
@@ -57,14 +58,14 @@ const Dashboard = () => {
 
               {/* Health Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <HealthCard 
+                <HealthSummaryCard 
                   title="Today's Health Summary"
                   riskLevel="Low Risk"
                   description="Your Physical Health Risk"
                   variant="success"
                 />
                 
-                <HealthCard 
+                <HealthSummaryCard 
                   title="Today's Health Summary"
                   riskLevel="Medium Risk"
                   description="Your Mental Health Risk"
