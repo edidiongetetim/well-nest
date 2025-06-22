@@ -5,9 +5,11 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
+import { ConfirmationScreen } from "@/components/ConfirmationScreen";
 
 const MentalCheckIn = () => {
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const questions = [
     {
@@ -122,7 +124,25 @@ const MentalCheckIn = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Mental health responses submitted:', responses);
-    // Handle form submission here
+    setShowConfirmation(true);
+  };
+
+  const handleTakeAgain = () => {
+    setShowConfirmation(false);
+    setResponses({});
+  };
+
+  const getSummaryData = () => {
+    const totalQuestions = questions.length;
+    const answeredQuestions = Object.keys(responses).length;
+    const completionRate = Math.round((answeredQuestions / totalQuestions) * 100);
+    
+    return {
+      'Total Questions': totalQuestions.toString(),
+      'Questions Answered': answeredQuestions.toString(),
+      'Completion Rate': `${completionRate}%`,
+      'Survey Type': 'EPDS Mental Health Check-in'
+    };
   };
 
   return (
@@ -134,79 +154,87 @@ const MentalCheckIn = () => {
           <DashboardHeader />
           
           <main className="flex-1 p-6">
-            <div className="max-w-4xl mx-auto">
-              {/* Page Title */}
-              <div className="mb-8">
-                <h1 className="font-poppins font-bold text-3xl text-primary mb-6">
-                  Today's EPDS Check-In
-                </h1>
-                <h2 className="font-poppins font-bold text-xl mb-8" style={{ color: '#5B3673' }}>
-                  Please indicate how you have felt in the last 7 days:
-                </h2>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {questions.map((q, index) => (
-                  <div key={q.id} className="bg-white p-6 rounded-lg shadow-sm">
-                    <h3 className="font-poppins font-semibold text-lg mb-6" style={{ color: '#5B3673' }}>
-                      {q.question}
-                    </h3>
-                    
-                    <RadioGroup
-                      value={responses[q.id] || ''}
-                      onValueChange={(value) => handleResponseChange(q.id, value)}
-                      className="space-y-4"
-                    >
-                      {q.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3 flex-1">
-                            <RadioGroupItem
-                              value={optionIndex.toString()}
-                              id={`${q.id}-${optionIndex}`}
-                              className="hidden"
-                            />
-                            <label
-                              htmlFor={`${q.id}-${optionIndex}`}
-                              className="font-poppins text-gray-700 cursor-pointer flex-1"
-                            >
-                              {option}
-                            </label>
-                          </div>
-                          
-                          <button
-                            type="button"
-                            onClick={() => handleResponseChange(q.id, optionIndex.toString())}
-                            className={`w-10 h-10 rounded-full font-poppins font-semibold transition-all duration-200 ${
-                              responses[q.id] === optionIndex.toString()
-                                ? 'bg-teal-500 text-white shadow-md'
-                                : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-                            }`}
-                          >
-                            {optionIndex}
-                          </button>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                ))}
-
-                {/* Submit Button */}
-                <div className="flex justify-center pt-8 pb-12">
-                  <Button 
-                    type="submit"
-                    className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                    style={{
-                      background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
-                      border: 'none',
-                      color: '#5B3673'
-                    }}
-                  >
-                    Submit
-                  </Button>
+            {showConfirmation ? (
+              <ConfirmationScreen
+                title="Mental Health Check-In Complete!"
+                summary={getSummaryData()}
+                onTakeAgain={handleTakeAgain}
+              />
+            ) : (
+              <div className="max-w-4xl mx-auto">
+                {/* Page Title */}
+                <div className="mb-8">
+                  <h1 className="font-poppins font-bold text-3xl text-primary mb-6">
+                    Today's EPDS Check-In
+                  </h1>
+                  <h2 className="font-poppins font-bold text-xl mb-8" style={{ color: '#5B3673' }}>
+                    Please indicate how you have felt in the last 7 days:
+                  </h2>
                 </div>
-              </form>
-            </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  {questions.map((q, index) => (
+                    <div key={q.id} className="bg-white p-6 rounded-lg shadow-sm">
+                      <h3 className="font-poppins font-semibold text-lg mb-6" style={{ color: '#5B3673' }}>
+                        {q.question}
+                      </h3>
+                      
+                      <RadioGroup
+                        value={responses[q.id] || ''}
+                        onValueChange={(value) => handleResponseChange(q.id, value)}
+                        className="space-y-4"
+                      >
+                        {q.options.map((option, optionIndex) => (
+                          <div key={optionIndex} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3 flex-1">
+                              <RadioGroupItem
+                                value={optionIndex.toString()}
+                                id={`${q.id}-${optionIndex}`}
+                                className="hidden"
+                              />
+                              <label
+                                htmlFor={`${q.id}-${optionIndex}`}
+                                className="font-poppins text-gray-700 cursor-pointer flex-1"
+                              >
+                                {option}
+                              </label>
+                            </div>
+                            
+                            <button
+                              type="button"
+                              onClick={() => handleResponseChange(q.id, optionIndex.toString())}
+                              className={`w-10 h-10 rounded-full font-poppins font-semibold transition-all duration-200 ${
+                                responses[q.id] === optionIndex.toString()
+                                  ? 'bg-teal-500 text-white shadow-md'
+                                  : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                              }`}
+                            >
+                              {optionIndex}
+                            </button>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  ))}
+
+                  {/* Submit Button */}
+                  <div className="flex justify-center pt-8 pb-12">
+                    <Button 
+                      type="submit"
+                      className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                      style={{
+                        background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
+                        border: 'none',
+                        color: '#5B3673'
+                      }}
+                    >
+                      Submit
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
           </main>
         </div>
       </div>
