@@ -139,6 +139,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       [questionId]: value
     }));
 
+    // Remove from unanswered questions
     setUnansweredQuestions(prev => prev.filter(id => id !== questionId));
   };
 
@@ -166,7 +167,10 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Mental health form submitted with responses:', responses);
+    
     if (!validateForm()) {
+      console.log('Form validation failed - missing answers');
       toast({
         title: "Please answer all questions before submitting.",
         variant: "destructive",
@@ -177,8 +181,11 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     setLoading(true);
 
     try {
+      console.log('Sending EPDS assessment to API...');
+      
       // Convert responses to array of integers in question order
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
+      console.log('Responses array:', responsesArray);
 
       // Send data to external EPDS API with correct payload format
       const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
@@ -191,21 +198,26 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         }),
       });
 
+      console.log('EPDS API response status:', epdsResponse.status);
+
       if (!epdsResponse.ok) {
-        throw new Error('Failed to get EPDS analysis from external service');
+        throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
       }
 
       const epdsData: EPDSResponse = await epdsResponse.json();
       console.log('EPDS response:', epdsData);
 
       // Store in Supabase with EPDS result
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id);
+
       const { error } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
           epds_score: epdsData.epds_score,
           risk_level: epdsData.risk_level,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user?.id
         });
 
       if (error) {
@@ -218,6 +230,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         return;
       }
 
+      console.log('Mental health data saved successfully');
       setEpdsResult(epdsData);
       setShowConfirmation(true);
 
@@ -227,7 +240,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       });
 
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in mental health assessment:', error);
       toast({
         title: "Could not process your assessment. Please check your answers and try again.",
         variant: "destructive",

@@ -91,6 +91,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
       [field]: value
     }));
 
+    // Clear error when user starts typing
     if (errors[field as keyof typeof errors]) {
       setErrors(prev => ({
         ...prev,
@@ -117,7 +118,10 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     };
 
     setErrors(newErrors);
-    return !Object.values(newErrors).some(error => error !== '');
+    
+    // Check if there are any errors
+    const hasErrors = Object.values(newErrors).some(error => error !== '');
+    return !hasErrors;
   };
 
   const resetForm = () => {
@@ -142,7 +146,10 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    
     if (!validateForm()) {
+      console.log('Form validation failed');
       toast({
         title: "Please complete all required fields to continue.",
         variant: "destructive",
@@ -153,6 +160,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     setLoading(true);
 
     try {
+      console.log('Sending API request to prediction service...');
+      
       // Send data to external prediction API with correct payload format
       const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
         method: 'POST',
@@ -170,14 +179,19 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
         }),
       });
 
+      console.log('API response status:', predictionResponse.status);
+
       if (!predictionResponse.ok) {
-        throw new Error('Failed to get prediction from external service');
+        throw new Error(`API request failed with status: ${predictionResponse.status}`);
       }
 
       const predictionData: PredictionResponse = await predictionResponse.json();
       console.log('Prediction response:', predictionData);
 
       // Store in Supabase with prediction result
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id);
+
       const { error } = await supabase
         .from('physical_health_checkins')
         .insert({
@@ -188,7 +202,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
           blood_pressure: formData.bloodPressure,
           prediction_result: predictionData.prediction || predictionData.risk_level,
           risk_level: predictionData.risk_level || predictionData.prediction,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user?.id
         });
 
       if (error) {
@@ -201,6 +215,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
         return;
       }
 
+      console.log('Data saved successfully');
       setPredictionResult(predictionData);
       setShowConfirmation(true);
 
@@ -210,7 +225,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
       });
 
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in health check-in:', error);
       toast({
         title: "There was an issue analyzing your health data. Please try again.",
         variant: "destructive",
