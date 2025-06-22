@@ -3,11 +3,26 @@ import Header from "@/components/Header";
 
 const About = () => {
   const teamMembers = [
-    { name: "Busayo Ososanwo"},
-    { name: "Edidiong Okon"},
-    { name: "Nusrat Jahan"},
-    { name: "Saja Abufarha"},
-    { name: "Yuechun Wei"}
+    { 
+      name: "Busayo Ososanwo",
+      image: "/lovable-uploads/f37a3715-d305-42f1-9bd1-66e0fe84d99d.png"
+    },
+    { 
+      name: "Edidiong Okon",
+      image: "/lovable-uploads/e7bc6374-d89a-45df-b659-0a9ec0347726.png"
+    },
+    { 
+      name: "Nusrat Jahan",
+      image: "/lovable-uploads/802d9016-9178-4cc6-b977-ed1bc678ebed.png"
+    },
+    { 
+      name: "Saja Abufarha",
+      image: "/lovable-uploads/c0555895-cf0b-4551-a623-f9b6a5d908be.png"
+    },
+    { 
+      name: "Esther Wei",
+      image: "/lovable-uploads/5a8a0752-ba84-4a45-9e9e-adfff24a86d0.png"
+    }
   ];
 
   return (
@@ -31,13 +46,17 @@ const About = () => {
             Meet the Team
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 justify-items-center">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center hover:shadow-md transition-shadow">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-3xl">👤</span>
+              <div key={index} className="text-center">
+                <div className="relative mb-4">
+                  <img
+                    src={member.image}
+                    alt={`Photo of ${member.name}`}
+                    className="w-24 h-24 md:w-28 md:h-28 rounded-full object-cover shadow-lg border-2 border-white mx-auto"
+                  />
                 </div>
-                <h3 className="font-poppins font-semibold text-purple-800 mb-2">
+                <h3 className="font-poppins font-bold text-purple-800 text-sm md:text-base">
                   {member.name}
                 </h3>
               </div>
