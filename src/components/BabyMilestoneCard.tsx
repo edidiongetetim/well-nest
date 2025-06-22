@@ -29,19 +29,32 @@ export function BabyMilestoneCard() {
           </p>
         </div>
         
-        {/* Main circular milestone card with centered baby illustration */}
+        {/* Main circular milestone card with perfectly circular baby image */}
         <div className="relative mx-auto w-48 h-48 bg-gradient-to-br from-purple-100 to-lavender-100 rounded-full shadow-lg mb-4 flex items-center justify-center overflow-hidden">
           {/* Soft inner shadow overlay */}
           <div className="absolute inset-0 rounded-full shadow-inner bg-gradient-to-br from-white/20 to-transparent"></div>
           
-          {/* Centered baby-in-womb illustration */}
-          <div className="relative z-10 flex items-center justify-center">
-            <img 
-              src="/lovable-uploads/7c881c4b-e41b-4a07-b50c-79817db01079.png" 
-              alt="Baby in womb illustration" 
-              className="w-24 h-28 object-contain drop-shadow-sm"
-            />
+          {/* Circular baby-in-womb illustration with masking */}
+          <div className="relative z-10 w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-200/30 to-lavender-200/30 shadow-inner flex items-center justify-center">
+            {/* Circular mask for the baby image */}
+            <div className="w-28 h-28 rounded-full overflow-hidden relative">
+              <img 
+                src="/lovable-uploads/97cc6b09-0747-494b-adc9-e3aa1ae40cd8.png" 
+                alt="Baby in womb illustration" 
+                className="w-full h-full object-cover object-center"
+                style={{
+                  filter: 'blur(0.5px)',
+                  maskImage: 'radial-gradient(circle, black 85%, transparent 100%)',
+                  WebkitMaskImage: 'radial-gradient(circle, black 85%, transparent 100%)'
+                }}
+              />
+              {/* Subtle circular border gradient */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent border border-white/20"></div>
+            </div>
           </div>
+          
+          {/* Additional soft glow effect */}
+          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-white/10 to-purple-100/20 blur-sm"></div>
         </div>
         
         {/* Progress info */}
