@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -6,10 +5,14 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
 import { ConfirmationScreen } from "@/components/ConfirmationScreen";
+import { useToast } from "@/hooks/use-toast";
+import { AlertCircle } from "lucide-react";
 
 const MentalCheckIn = () => {
+  const { toast } = useToast();
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([]);
 
   const questions = [
     {
@@ -119,10 +122,40 @@ const MentalCheckIn = () => {
       ...prev,
       [questionId]: value
     }));
+
+    // Remove question from unanswered list if it was there
+    setUnansweredQuestions(prev => prev.filter(id => id !== questionId));
+  };
+
+  const validateForm = () => {
+    const unanswered = questions.filter(q => !responses[q.id]).map(q => q.id);
+    setUnansweredQuestions(unanswered);
+    return unanswered.length === 0;
+  };
+
+  const scrollToFirstUnanswered = () => {
+    if (unansweredQuestions.length > 0) {
+      const firstUnansweredElement = document.getElementById(`question-${unansweredQuestions[0]}`);
+      if (firstUnansweredElement) {
+        firstUnansweredElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: "Please answer all questions before submitting.",
+        variant: "destructive",
+      });
+      
+      // Scroll to first unanswered question after a brief delay
+      setTimeout(scrollToFirstUnanswered, 100);
+      return;
+    }
+
     console.log('Mental health responses submitted:', responses);
     setShowConfirmation(true);
   };
@@ -130,6 +163,7 @@ const MentalCheckIn = () => {
   const handleTakeAgain = () => {
     setShowConfirmation(false);
     setResponses({});
+    setUnansweredQuestions([]);
   };
 
   const getSummaryData = () => {
@@ -172,13 +206,36 @@ const MentalCheckIn = () => {
                   </h2>
                 </div>
 
+                {/* Validation Message */}
+                {unansweredQuestions.length > 0 && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                    <p className="font-poppins text-red-700">
+                      Please answer all questions before submitting. {unansweredQuestions.length} question{unansweredQuestions.length > 1 ? 's' : ''} remaining.
+                    </p>
+                  </div>
+                )}
+
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-8">
                   {questions.map((q, index) => (
-                    <div key={q.id} className="bg-white p-6 rounded-lg shadow-sm">
-                      <h3 className="font-poppins font-semibold text-lg mb-6" style={{ color: '#5B3673' }}>
-                        {q.question}
-                      </h3>
+                    <div 
+                      key={q.id} 
+                      id={`question-${q.id}`}
+                      className={`p-6 rounded-lg shadow-sm transition-all duration-200 ${
+                        unansweredQuestions.includes(q.id) 
+                          ? 'bg-red-50 border-2 border-red-200' 
+                          : 'bg-white border border-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 mb-6">
+                        <h3 className="font-poppins font-semibold text-lg flex-1" style={{ color: '#5B3673' }}>
+                          {q.question}
+                        </h3>
+                        {unansweredQuestions.includes(q.id) && (
+                          <AlertCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
+                        )}
+                      </div>
                       
                       <RadioGroup
                         value={responses[q.id] || ''}
