@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, Trash2, Share2 } from "lucide-react";
 import { format } from "date-fns";
+import { ExportDropdown } from "./ExportDropdown";
+import { HealthRecord } from "@/utils/exportUtils";
 
 interface HealthHistoryCardProps {
   id: string;
@@ -12,6 +14,7 @@ interface HealthHistoryCardProps {
   onDelete: (id: string) => void;
   onShare: (id: string) => void;
   type: 'physical' | 'mental';
+  data: any;
 }
 
 export const HealthHistoryCard = ({
@@ -21,9 +24,21 @@ export const HealthHistoryCard = ({
   onViewFull,
   onDelete,
   onShare,
-  type
+  type,
+  data
 }: HealthHistoryCardProps) => {
   const formattedDate = format(new Date(date), 'MMM dd, yyyy • h:mm a');
+  
+  const record: HealthRecord = {
+    id,
+    created_at: date,
+    type,
+    data
+  };
+
+  const handleExport = () => {
+    // Could add toast notification here if needed
+  };
   
   return (
     <Card className="bg-white border border-gray-100 hover:shadow-md transition-all duration-200">
@@ -52,6 +67,7 @@ export const HealthHistoryCard = ({
             >
               <Eye className="h-4 w-4" />
             </Button>
+            <ExportDropdown record={record} onExport={handleExport} />
             <Button
               variant="ghost"
               size="sm"

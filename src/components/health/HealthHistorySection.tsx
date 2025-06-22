@@ -1,12 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { HealthHistoryFilters } from "./HealthHistoryFilters";
 import { HealthHistoryCard } from "./HealthHistoryCard";
 import { HealthDetailsModal } from "./HealthDetailsModal";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
+import { exportAllRecordsAsCSV, HealthRecord } from "@/utils/exportUtils";
 
 type FilterType = 'week' | 'month' | 'all';
 
@@ -117,6 +119,40 @@ export const HealthHistorySection = ({ type }: HealthHistorySectionProps) => {
     });
   };
 
+  const handleDownloadAll = () => {
+    if (historyData.length === 0) {
+      toast({
+        title: "No records to export",
+        description: "There are no records in the selected time period.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const records: HealthRecord[] = historyData.map(record => ({
+      id: record.id,
+      created_at: record.created_at,
+      type,
+      data: record
+    }));
+
+    exportAllRecordsAsCSV(records, activeFilter);
+    
+    toast({
+      title: "Records exported successfully",
+      description: `Downloaded ${records.length} ${type} health records.`,
+    });
+  };
+
+  const getFilterLabel = () => {
+    switch (activeFilter) {
+      case 'week': return 'last 7 days';
+      case 'month': return 'this month';
+      case 'all': return 'all time';
+      default: return 'selected period';
+    }
+  };
+
   return (
     <Card className="bg-white shadow-sm border border-gray-100">
       <CardHeader className={`${
@@ -124,9 +160,22 @@ export const HealthHistorySection = ({ type }: HealthHistorySectionProps) => {
           ? 'bg-gradient-to-r from-blue-50 to-cyan-50' 
           : 'bg-gradient-to-r from-purple-50 to-pink-50'
       }`}>
-        <CardTitle className="font-poppins text-xl text-primary">
-          {type === 'physical' ? 'Physical Health' : 'Mental Health'} History
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="font-poppins text-xl text-primary">
+            {type === 'physical' ? 'Physical Health' : 'Mental Health'} History
+          </CardTitle>
+          {historyData.length > 0 && (
+            <Button
+              onClick={handleDownloadAll}
+              variant="outline"
+              size="sm"
+              className="font-poppins hover:bg-white"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download All ({getFilterLabel()})
+            </Button>
+          )}
+        </div>
       </CardHeader>
       
       <CardContent className="p-6">
@@ -158,6 +207,7 @@ export const HealthHistorySection = ({ type }: HealthHistorySectionProps) => {
                 onDelete={handleDelete}
                 onShare={handleShare}
                 type={type}
+                data={record}
               />
             ))}
           </div>
