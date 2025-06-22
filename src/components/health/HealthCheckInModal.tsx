@@ -10,10 +10,16 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Check } from "lucide-react";
 
 interface HealthCheckInModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface PredictionResponse {
+  prediction?: string;
+  risk_level?: string;
 }
 
 export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalProps) => {
@@ -35,6 +41,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
   });
 
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [predictionResult, setPredictionResult] = useState<PredictionResponse | null>(null);
 
   const validateField = (field: string, value: string) => {
     if (!value.trim()) {
@@ -127,6 +135,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
       heartbeat: '',
       bloodPressure: ''
     });
+    setShowConfirmation(false);
+    setPredictionResult(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,6 +153,29 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     setLoading(true);
 
     try {
+      // Send data to external prediction API
+      const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          age: formData.age,
+          systolic: formData.systolic,
+          diastolic: formData.diastolic,
+          heartbeat: formData.heartbeat,
+          blood_pressure: formData.bloodPressure,
+        }),
+      });
+
+      if (!predictionResponse.ok) {
+        throw new Error('Failed to get prediction from external service');
+      }
+
+      const predictionData: PredictionResponse = await predictionResponse.json();
+      console.log('Prediction response:', predictionData);
+
+      // Store in Supabase with prediction result
       const { error } = await supabase
         .from('physical_health_checkins')
         .insert({
@@ -151,6 +184,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
           diastolic: formData.diastolic,
           heartbeat: formData.heartbeat,
           blood_pressure: formData.bloodPressure,
+          prediction_result: predictionData.prediction || predictionData.risk_level,
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
@@ -164,20 +198,18 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
         return;
       }
 
+      setPredictionResult(predictionData);
+      setShowConfirmation(true);
+
       toast({
         title: "Physical Check-In Complete!",
-        description: "Your vitals have been recorded successfully.",
+        description: "Your vitals have been recorded and analyzed.",
       });
 
-      resetForm();
-      onOpenChange(false);
-      
-      // Trigger a page refresh to update the health history
-      window.location.reload();
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error saving your check-in",
+        title: "Error processing your check-in",
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -190,6 +222,92 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     resetForm();
     onOpenChange(false);
   };
+
+  const handleTakeAgain = () => {
+    resetForm();
+  };
+
+  if (showConfirmation) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-poppins text-2xl text-primary text-center">
+              Physical Check-In Complete!
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 text-center">
+            {/* Success Icon */}
+            <div className="w-20 h-20 mx-auto bg-gradient-to-r from-teal-100 to-green-100 rounded-full flex items-center justify-center mb-6">
+              <Check className="w-10 h-10 text-teal-600" />
+            </div>
+
+            {/* Risk Level Result */}
+            <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border">
+              <h3 className="font-poppins font-semibold text-lg text-primary mb-2">
+                Health Risk Assessment
+              </h3>
+              <p className="font-poppins text-2xl font-bold" style={{ color: '#5B3673' }}>
+                {predictionResult?.prediction || predictionResult?.risk_level || 'Assessment Complete'}
+              </p>
+            </div>
+
+            {/* Submitted Data Summary */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <h3 className="font-poppins font-semibold text-lg mb-4" style={{ color: '#5B3673' }}>
+                Your Submitted Vitals
+              </h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-poppins text-gray-600">Age:</span>
+                  <span className="font-poppins font-medium ml-2">{formData.age}</span>
+                </div>
+                <div>
+                  <span className="font-poppins text-gray-600">Systolic:</span>
+                  <span className="font-poppins font-medium ml-2">{formData.systolic} mmHg</span>
+                </div>
+                <div>
+                  <span className="font-poppins text-gray-600">Diastolic:</span>
+                  <span className="font-poppins font-medium ml-2">{formData.diastolic} mmHg</span>
+                </div>
+                <div>
+                  <span className="font-poppins text-gray-600">Heart Rate:</span>
+                  <span className="font-poppins font-medium ml-2">{formData.heartbeat} BPM</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="font-poppins text-gray-600">Blood Pressure:</span>
+                  <span className="font-poppins font-medium ml-2">{formData.bloodPressure} mmHg</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-center pt-4">
+              <Button 
+                onClick={handleClose}
+                className="px-8 py-3 font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
+                  border: 'none',
+                  color: '#5B3673'
+                }}
+              >
+                Close
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleTakeAgain}
+                className="px-8 py-3 font-poppins font-medium rounded-full border-2 border-teal-400 text-teal-600 hover:bg-teal-50"
+              >
+                Take Again
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -328,7 +446,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
                   color: '#5B3673'
                 }}
               >
-                {loading ? 'Saving...' : 'Submit Check-In'}
+                {loading ? 'Analyzing...' : 'Submit Check-In'}
               </Button>
             </div>
           </form>

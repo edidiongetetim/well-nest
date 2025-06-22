@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MentalHealthModalProps {
@@ -17,11 +17,18 @@ interface MentalHealthModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface EPDSResponse {
+  epds_score: number;
+  risk_level: string;
+}
+
 export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps) => {
   const { toast } = useToast();
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [epdsResult, setEpdsResult] = useState<EPDSResponse | null>(null);
 
   const questions = [
     {
@@ -126,14 +133,6 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     }
   ];
 
-  const calculateEPDSScore = (responses: Record<string, string>) => {
-    let score = 0;
-    Object.values(responses).forEach(response => {
-      score += parseInt(response) || 0;
-    });
-    return score;
-  };
-
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({
       ...prev,
@@ -152,6 +151,16 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
   const resetForm = () => {
     setResponses({});
     setUnansweredQuestions([]);
+    setShowConfirmation(false);
+    setEpdsResult(null);
+  };
+
+  const getRiskLevelColor = (riskLevel: string) => {
+    const level = riskLevel.toLowerCase();
+    if (level.includes('low')) return 'text-green-600';
+    if (level.includes('moderate')) return 'text-yellow-600';
+    if (level.includes('high')) return 'text-red-500';
+    return 'text-gray-600';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -168,13 +177,34 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     setLoading(true);
 
     try {
-      const epdsScore = calculateEPDSScore(responses);
+      // Convert responses to array of integers
+      const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
 
+      // Send data to external EPDS API
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          responses: responsesArray,
+        }),
+      });
+
+      if (!epdsResponse.ok) {
+        throw new Error('Failed to get EPDS analysis from external service');
+      }
+
+      const epdsData: EPDSResponse = await epdsResponse.json();
+      console.log('EPDS response:', epdsData);
+
+      // Store in Supabase with EPDS result
       const { error } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsScore,
+          epds_score: epdsData.epds_score,
+          risk_level: epdsData.risk_level,
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
@@ -188,20 +218,18 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         return;
       }
 
+      setEpdsResult(epdsData);
+      setShowConfirmation(true);
+
       toast({
         title: "Mental Health Check-In Complete!",
-        description: `EPDS assessment completed. Score: ${epdsScore}`,
+        description: "Your EPDS assessment has been completed and analyzed.",
       });
 
-      resetForm();
-      onOpenChange(false);
-      
-      // Trigger a page refresh to update the health history
-      window.location.reload();
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error saving your check-in",
+        title: "Error processing your assessment",
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -214,6 +242,97 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     resetForm();
     onOpenChange(false);
   };
+
+  const handleTakeAgain = () => {
+    resetForm();
+  };
+
+  if (showConfirmation) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-poppins text-2xl text-primary text-center">
+              Mental Health Assessment Complete!
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 text-center">
+            {/* Success Icon */}
+            <div className="w-20 h-20 mx-auto bg-gradient-to-r from-purple-100 to-lavender-100 rounded-full flex items-center justify-center mb-6">
+              <Check className="w-10 h-10 text-purple-600" />
+            </div>
+
+            {/* EPDS Results */}
+            <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border">
+              <h3 className="font-poppins font-semibold text-lg text-primary mb-4">
+                EPDS Assessment Results
+              </h3>
+              <div className="space-y-2">
+                <div>
+                  <span className="font-poppins text-2xl font-bold" style={{ color: '#5B3673' }}>
+                    Score: {epdsResult?.epds_score}
+                  </span>
+                </div>
+                <div>
+                  <span className={`font-poppins text-lg font-semibold ${getRiskLevelColor(epdsResult?.risk_level || '')}`}>
+                    {epdsResult?.risk_level}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Assessment Summary */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <h3 className="font-poppins font-semibold text-lg mb-4" style={{ color: '#5B3673' }}>
+                Assessment Summary
+              </h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-poppins text-gray-600">Questions Answered:</span>
+                  <span className="font-poppins font-medium ml-2">{questions.length}</span>
+                </div>
+                <div>
+                  <span className="font-poppins text-gray-600">Completion Rate:</span>
+                  <span className="font-poppins font-medium ml-2">100%</span>
+                </div>
+                <div>
+                  <span className="font-poppins text-gray-600">Assessment Type:</span>
+                  <span className="font-poppins font-medium ml-2">EPDS</span>
+                </div>
+                <div>
+                  <span className="font-poppins text-gray-600">Date:</span>
+                  <span className="font-poppins font-medium ml-2">{new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-center pt-4">
+              <Button 
+                onClick={handleClose}
+                className="px-8 py-3 font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{
+                  background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
+                  border: 'none',
+                  color: '#5B3673'
+                }}
+              >
+                Close
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleTakeAgain}
+                className="px-8 py-3 font-poppins font-medium rounded-full border-2 border-purple-400 text-purple-600 hover:bg-purple-50"
+              >
+                Take Again
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -315,7 +434,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
                   color: '#5B3673'
                 }}
               >
-                {loading ? 'Saving...' : 'Submit Assessment'}
+                {loading ? 'Analyzing...' : 'Submit Assessment'}
               </Button>
             </div>
           </form>
