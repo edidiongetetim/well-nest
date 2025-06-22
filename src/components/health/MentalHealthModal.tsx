@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MentalHealthModalProps {
@@ -36,7 +36,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     },
     {
       id: 'enjoyment',
-      question: 'I have looked forward to things with enjoyment:',
+      question: 'I have looked forward with enjoyment to things:',
       options: [
         'As much as I ever did',
         'Rather less than I used to',
@@ -72,6 +72,56 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         'No, not much',
         'Yes, sometimes',
         'Yes, quite a lot'
+      ]
+    },
+    {
+      id: 'overwhelmed',
+      question: 'Things have been getting on top of me:',
+      options: [
+        'No, I am coping as well as ever',
+        'No, most of the time I cope quite well',
+        'Yes, sometimes I haven\'t been coping as well as usual',
+        'Yes, most of the time I haven\'t been coping at all'
+      ]
+    },
+    {
+      id: 'sleeping',
+      question: 'I have been so unhappy that I have had difficulty sleeping:',
+      options: [
+        'No, not at all',
+        'Not very often',
+        'Yes, sometimes',
+        'Yes, most of the time'
+      ]
+    },
+    {
+      id: 'sad',
+      question: 'I have felt sad or miserable:',
+      options: [
+        'No, not at all',
+        'Not very often',
+        'Yes, quite often',
+        'Yes, most of the time'
+      ]
+    },
+    {
+      id: 'crying',
+      question: 'I have been so unhappy that I have been crying:',
+      options: [
+        'No, never',
+        'Only occasionally',
+        'Yes, quite often',
+        'Yes, most of the time'
+      ]
+    },
+    {
+      id: 'selfharm',
+      question: 'The thought of harming myself has occurred to me:',
+      options: [
+        'Never',
+        'Hardly ever',
+        'Sometimes',
+        'Yes, quite often'
       ]
     }
   ];
@@ -168,18 +218,10 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between">
+        <DialogHeader>
           <DialogTitle className="font-poppins text-2xl text-primary">
             EPDS Mental Health Check-In
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
         
         <div className="space-y-6">
