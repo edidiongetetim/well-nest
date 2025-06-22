@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -185,6 +184,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
           heartbeat: formData.heartbeat,
           blood_pressure: formData.bloodPressure,
           prediction_result: predictionData.prediction || predictionData.risk_level,
+          risk_level: predictionData.risk_level || predictionData.prediction,
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
@@ -209,8 +209,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error processing your check-in",
-        description: "Please try again later.",
+        title: "Something went wrong. Please try again later.",
         variant: "destructive",
       });
     } finally {

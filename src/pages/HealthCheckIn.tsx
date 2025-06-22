@@ -8,6 +8,11 @@ import { ConfirmationScreen } from "@/components/ConfirmationScreen";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface PredictionResponse {
+  prediction?: string;
+  risk_level?: string;
+}
+
 const HealthCheckIn = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -28,6 +33,7 @@ const HealthCheckIn = () => {
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [predictionResult, setPredictionResult] = useState<PredictionResponse | null>(null);
 
   const validateField = (field: string, value: string) => {
     if (!value.trim()) {
@@ -139,6 +145,29 @@ const HealthCheckIn = () => {
     setLoading(true);
 
     try {
+      // Send data to external prediction API
+      const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          age: formData.age,
+          systolic: formData.systolic,
+          diastolic: formData.diastolic,
+          heartbeat: formData.heartbeat,
+          blood_pressure: formData.bloodPressure,
+        }),
+      });
+
+      if (!predictionResponse.ok) {
+        throw new Error('Failed to get prediction from external service');
+      }
+
+      const predictionData: PredictionResponse = await predictionResponse.json();
+      console.log('Prediction response:', predictionData);
+
+      // Store in Supabase with prediction result
       const { error } = await supabase
         .from('physical_health_checkins')
         .insert({
@@ -147,6 +176,8 @@ const HealthCheckIn = () => {
           diastolic: formData.diastolic,
           heartbeat: formData.heartbeat,
           blood_pressure: formData.bloodPressure,
+          prediction_result: predictionData.prediction || predictionData.risk_level,
+          risk_level: predictionData.risk_level || predictionData.prediction,
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
@@ -161,12 +192,18 @@ const HealthCheckIn = () => {
       }
 
       console.log('Physical health data submitted successfully');
+      setPredictionResult(predictionData);
       setShowConfirmation(true);
+
+      toast({
+        title: "Physical Check-In Complete!",
+        description: "Your vitals have been recorded and analyzed.",
+      });
+
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error saving your check-in",
-        description: "Please try again later.",
+        title: "Something went wrong. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -190,6 +227,7 @@ const HealthCheckIn = () => {
       heartbeat: '',
       bloodPressure: ''
     });
+    setPredictionResult(null);
   };
 
   const getSummaryData = () => {
@@ -198,7 +236,8 @@ const HealthCheckIn = () => {
       systolic: formData.systolic ? `${formData.systolic} mmHg` : '',
       diastolic: formData.diastolic ? `${formData.diastolic} mmHg` : '',
       heartbeat: formData.heartbeat ? `${formData.heartbeat} bpm` : '',
-      bloodPressure: formData.bloodPressure ? `${formData.bloodPressure} mmHg` : ''
+      bloodPressure: formData.bloodPressure ? `${formData.bloodPressure} mmHg` : '',
+      riskLevel: predictionResult?.prediction || predictionResult?.risk_level || 'Assessment Complete'
     };
   };
 
@@ -212,11 +251,81 @@ const HealthCheckIn = () => {
           
           <main className="flex-1 p-6">
             {showConfirmation ? (
-              <ConfirmationScreen
-                title="Physical Check-In Complete!"
-                summary={getSummaryData()}
-                onTakeAgain={handleTakeAgain}
-              />
+              <div className="max-w-2xl mx-auto text-center">
+                <div className="mb-8">
+                  <div className="w-20 h-20 mx-auto bg-gradient-to-r from-teal-100 to-green-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-10 h-10 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h1 className="font-poppins font-bold text-2xl text-primary mb-2">
+                    Physical Check-In Complete!
+                  </h1>
+                  <p className="font-poppins text-lg text-gray-600">
+                    Your health check-in has been saved and analyzed.
+                  </p>
+                </div>
+
+                {/* Risk Level Result */}
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border mb-8">
+                  <h3 className="font-poppins font-semibold text-lg text-primary mb-2">
+                    Health Risk Assessment
+                  </h3>
+                  <p className="font-poppins text-2xl font-bold" style={{ color: '#5B3673' }}>
+                    {predictionResult?.prediction || predictionResult?.risk_level || 'Assessment Complete'}
+                  </p>
+                </div>
+
+                {/* Summary */}
+                <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+                  <h3 className="font-poppins font-semibold text-lg mb-4" style={{ color: '#5B3673' }}>
+                    Summary of Your Submission
+                  </h3>
+                  <div className="space-y-3">
+                    {Object.entries(getSummaryData()).map(([key, value]) => (
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="font-poppins text-gray-700 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}:
+                        </span>
+                        <span className="font-poppins font-medium text-gray-900">
+                          {value || 'Not provided'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    onClick={() => window.location.href = '/dashboard'}
+                    className="px-8 py-3 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
+                      border: 'none',
+                      color: '#5B3673'
+                    }}
+                  >
+                    Go to Dashboard
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/health'}
+                    className="px-8 py-3 text-lg font-poppins font-medium rounded-full border-2 border-teal-400 text-teal-600 hover:bg-teal-50"
+                  >
+                    View History
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={handleTakeAgain}
+                    className="px-8 py-3 text-lg font-poppins font-medium rounded-full border-2 border-gray-300 text-gray-600 hover:bg-gray-50"
+                  >
+                    Take Again
+                  </Button>
+                </div>
+              </div>
             ) : (
               <div className="max-w-2xl mx-auto">
                 {/* Page Title */}
@@ -370,7 +479,7 @@ const HealthCheckIn = () => {
                         color: '#5B3673'
                       }}
                     >
-                      {loading ? 'Saving...' : 'Submit'}
+                      {loading ? 'Analyzing...' : 'Submit'}
                     </Button>
                   </div>
                 </form>
