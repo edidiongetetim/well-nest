@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -132,10 +131,6 @@ export default function Settings() {
     }
   };
 
-  const handleExportData = async () => {
-    toast.info("Data export will be available soon");
-  };
-
   const handleDeleteAccount = async () => {
     try {
       toast.error("Account deletion requires contacting support");
@@ -188,12 +183,12 @@ export default function Settings() {
                   setNewPassword={setNewPassword}
                   confirmPassword={confirmPassword}
                   setConfirmPassword={setConfirmPassword}
-                  onExportData={handleExportData}
+                  onExportData={() => {}} // This is now handled in DataManagementSection
                   onDeleteAccount={() => setShowDeleteModal(true)}
                 />
 
                 <DataManagementSection
-                  onExportData={handleExportData}
+                  onExportData={() => {}} // Export is now handled internally
                   onDeleteAccount={() => setShowDeleteModal(true)}
                 />
 

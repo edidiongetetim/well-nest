@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Eye, Trash2, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { ExportDropdown } from "./ExportDropdown";
+import { DeleteRecordModal } from "./DeleteRecordModal";
 import { HealthRecord } from "@/utils/exportUtils";
+import { useState } from "react";
 
 interface HealthHistoryCardProps {
   id: string;
@@ -27,6 +29,7 @@ export const HealthHistoryCard = ({
   type,
   data
 }: HealthHistoryCardProps) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const formattedDate = format(new Date(date), 'MMM dd, yyyy • h:mm a');
   
   const record: HealthRecord = {
@@ -39,54 +42,71 @@ export const HealthHistoryCard = ({
   const handleExport = () => {
     // Could add toast notification here if needed
   };
+
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete(id);
+  };
   
   return (
-    <Card className="bg-white border border-gray-100 hover:shadow-md transition-all duration-200">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`w-3 h-3 rounded-full ${
-                type === 'physical' ? 'bg-blue-400' : 'bg-purple-400'
-              }`} />
-              <span className="font-poppins text-sm text-gray-500">
-                {formattedDate}
-              </span>
+    <>
+      <Card className="bg-white border border-gray-100 hover:shadow-md transition-all duration-200">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  type === 'physical' ? 'bg-blue-400' : 'bg-purple-400'
+                }`} />
+                <span className="font-poppins text-sm text-gray-500">
+                  {formattedDate}
+                </span>
+              </div>
+              <p className="font-poppins text-gray-800 font-medium">
+                {summary}
+              </p>
             </div>
-            <p className="font-poppins text-gray-800 font-medium">
-              {summary}
-            </p>
+            
+            <div className="flex items-center gap-2 ml-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onViewFull(id)}
+                className="h-8 w-8 p-0 hover:bg-teal-50 hover:text-teal-600"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <ExportDropdown record={record} onExport={handleExport} />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onShare(id)}
+                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteClick}
+                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2 ml-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewFull(id)}
-              className="h-8 w-8 p-0 hover:bg-teal-50 hover:text-teal-600"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <ExportDropdown record={record} onExport={handleExport} />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onShare(id)}
-              className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(id)}
-              className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <DeleteRecordModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        onConfirm={handleConfirmDelete}
+        recordType={type}
+      />
+    </>
   );
 };
