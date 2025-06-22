@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -155,9 +154,9 @@ const HealthCheckIn = () => {
     setLoading(true);
 
     try {
-      console.log('Sending API request to prediction service...');
+      console.log('Starting API request...');
       
-      // Prepare the payload for the API
+      // Prepare the payload for the API - ensuring all values are numbers
       const apiPayload = {
         age: parseInt(formData.age),
         SystolicBP: parseInt(formData.systolic),
@@ -168,8 +167,15 @@ const HealthCheckIn = () => {
       };
       
       console.log('API payload:', apiPayload);
+      
+      // Validate that all values are valid numbers
+      const hasInvalidNumbers = Object.values(apiPayload).some(value => isNaN(value));
+      if (hasInvalidNumbers) {
+        throw new Error('Invalid numeric values in form data');
+      }
 
-      // Send data to external prediction API
+      // Send data to external prediction API with better error handling
+      console.log('Sending request to prediction API...');
       const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
         method: 'POST',
         headers: {
@@ -177,22 +183,45 @@ const HealthCheckIn = () => {
           'Accept': 'application/json',
         },
         body: JSON.stringify(apiPayload),
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(30000) // 30 second timeout
       });
 
-      console.log('API response status:', predictionResponse.status);
+      console.log('API response received:', {
+        status: predictionResponse.status,
+        statusText: predictionResponse.statusText,
+        headers: Object.fromEntries(predictionResponse.headers.entries())
+      });
 
       if (!predictionResponse.ok) {
-        const errorText = await predictionResponse.text();
-        console.error('API error response:', errorText);
-        throw new Error(`API request failed with status: ${predictionResponse.status} - ${errorText}`);
+        let errorMessage = `API request failed with status: ${predictionResponse.status}`;
+        try {
+          const errorText = await predictionResponse.text();
+          console.error('API error response body:', errorText);
+          errorMessage += ` - ${errorText}`;
+        } catch (parseError) {
+          console.error('Could not parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
-      const predictionData: PredictionResponse = await predictionResponse.json();
-      console.log('Prediction response:', predictionData);
+      let predictionData: PredictionResponse;
+      try {
+        predictionData = await predictionResponse.json();
+        console.log('Parsed prediction response:', predictionData);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error('Invalid JSON response from prediction API');
+      }
 
-      // Store in Supabase - using existing column structure
+      // Store in Supabase
+      console.log('Saving to database...');
       const { data: { user } } = await supabase.auth.getUser();
       console.log('Current user:', user?.id);
+
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
 
       const dbPayload = {
         age: formData.age,
@@ -201,8 +230,8 @@ const HealthCheckIn = () => {
         heartbeat: formData.heartbeat,
         prediction_result: predictionData.prediction || predictionData.risk_level || null,
         risk_level: predictionData.risk_level || predictionData.prediction || null,
-        user_id: user?.id,
-        // Store blood sugar and body temp in the blood_pressure field as JSON for now
+        user_id: user.id,
+        // Store blood sugar and body temp in the blood_pressure field as JSON
         blood_pressure: JSON.stringify({
           bloodSugar: formData.bloodSugar,
           bodyTemperature: formData.bodyTemperature
@@ -211,18 +240,13 @@ const HealthCheckIn = () => {
 
       console.log('Database payload:', dbPayload);
 
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('physical_health_checkins')
         .insert(dbPayload);
 
-      if (error) {
-        console.error('Error saving health data:', error);
-        toast({
-          title: "Error saving your check-in",
-          description: "Please try again later.",
-          variant: "destructive",
-        });
-        return;
+      if (dbError) {
+        console.error('Database error:', dbError);
+        throw new Error(`Database error: ${dbError.message}`);
       }
 
       console.log('Physical health data submitted successfully');
@@ -235,10 +259,25 @@ const HealthCheckIn = () => {
       });
 
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Complete error details:', error);
+      
+      let userMessage = "There was an issue analyzing your health data. Please try again.";
+      let description = "";
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          userMessage = "Request timed out. Please check your internet connection and try again.";
+        } else if (error.message.includes('fetch')) {
+          userMessage = "Network error. Please check your internet connection.";
+        } else if (error.message.includes('JSON')) {
+          userMessage = "Server returned invalid data. Please try again later.";
+        }
+        description = error.message;
+      }
+      
       toast({
-        title: "There was an issue analyzing your health data. Please try again.",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        title: userMessage,
+        description: description,
         variant: "destructive",
       });
     } finally {
