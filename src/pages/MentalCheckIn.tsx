@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -163,22 +162,30 @@ const MentalCheckIn = () => {
     setLoading(true);
 
     try {
+      console.log('Sending EPDS assessment to API...');
+      
       // Convert responses to array of integers in question order
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
+      console.log('Responses array for API:', responsesArray);
 
-      // Send data to external EPDS API with correct payload format
+      // Send data to EPDS API with correct headers and payload
       const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           responses: responsesArray
         }),
       });
 
+      console.log('EPDS API response status:', epdsResponse.status);
+
       if (!epdsResponse.ok) {
-        throw new Error('Failed to get EPDS analysis from external service');
+        const errorText = await epdsResponse.text();
+        console.error('EPDS API error:', errorText);
+        throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
       }
 
       const epdsData = await epdsResponse.json();
@@ -210,13 +217,13 @@ const MentalCheckIn = () => {
 
       toast({
         title: "✅ Assessment Complete!",
-        description: "Your EPDS assessment has been completed and analyzed.",
+        description: `Your EPDS Score: ${epdsData.epds_score} – ${epdsData.risk_level}`,
       });
 
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Could not process your assessment. Please check your answers and try again.",
+        title: "There was an issue processing the mental health check-in. Please try again.",
         variant: "destructive",
       });
     } finally {

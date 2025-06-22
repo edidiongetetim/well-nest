@@ -185,13 +185,14 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       
       // Convert responses to array of integers in question order
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
-      console.log('Responses array:', responsesArray);
+      console.log('Responses array for API:', responsesArray);
 
-      // Send data to external EPDS API with correct payload format
+      // Send data to EPDS API with correct headers and payload
       const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           responses: responsesArray
@@ -201,6 +202,8 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       console.log('EPDS API response status:', epdsResponse.status);
 
       if (!epdsResponse.ok) {
+        const errorText = await epdsResponse.text();
+        console.error('EPDS API error:', errorText);
         throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
       }
 
@@ -236,13 +239,13 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
 
       toast({
         title: "✅ Assessment Complete!",
-        description: "Your EPDS assessment has been completed and analyzed.",
+        description: `Your EPDS Score: ${epdsData.epds_score} – ${epdsData.risk_level}`,
       });
 
     } catch (error) {
       console.error('Error in mental health assessment:', error);
       toast({
-        title: "Could not process your assessment. Please check your answers and try again.",
+        title: "There was an issue processing the mental health check-in. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -278,18 +281,16 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
             {/* EPDS Results */}
             <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border">
               <h3 className="font-poppins font-semibold text-lg text-primary mb-4">
-                EPDS Assessment Results
+                Your EPDS Results
               </h3>
-              <div className="space-y-2">
-                <div>
-                  <span className="font-poppins text-2xl font-bold" style={{ color: '#5B3673' }}>
+              <div className="space-y-3">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600 mb-2">
                     Score: {epdsResult?.epds_score}
-                  </span>
-                </div>
-                <div>
-                  <span className={`font-poppins text-lg font-semibold ${getRiskLevelColor(epdsResult?.risk_level || '')}`}>
+                  </div>
+                  <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.risk_level || '')}`}>
                     {epdsResult?.risk_level}
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
