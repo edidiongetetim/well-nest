@@ -20,7 +20,8 @@ const HealthCheckIn = () => {
     systolic: '',
     diastolic: '',
     heartbeat: '',
-    bloodPressure: ''
+    bloodSugar: '',
+    bodyTemperature: ''
   });
 
   const [errors, setErrors] = useState({
@@ -28,7 +29,8 @@ const HealthCheckIn = () => {
     systolic: '',
     diastolic: '',
     heartbeat: '',
-    bloodPressure: ''
+    bloodSugar: '',
+    bodyTemperature: ''
   });
 
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -68,9 +70,14 @@ const HealthCheckIn = () => {
           return 'Please enter a valid heart rate (30-300)';
         }
         break;
-      case 'bloodPressure':
-        if (numValue < 50 || numValue > 300) {
-          return 'Please enter a valid blood pressure';
+      case 'bloodSugar':
+        if (numValue < 70 || numValue > 400) {
+          return 'Please enter a valid blood sugar level (70-400 mg/dL)';
+        }
+        break;
+      case 'bodyTemperature':
+        if (numValue < 95 || numValue > 105) {
+          return 'Please enter a valid body temperature (95-105°F)';
         }
         break;
     }
@@ -107,7 +114,8 @@ const HealthCheckIn = () => {
       systolic: validateField('systolic', formData.systolic),
       diastolic: validateField('diastolic', formData.diastolic),
       heartbeat: validateField('heartbeat', formData.heartbeat),
-      bloodPressure: validateField('bloodPressure', formData.bloodPressure)
+      bloodSugar: validateField('bloodSugar', formData.bloodSugar),
+      bodyTemperature: validateField('bodyTemperature', formData.bodyTemperature)
     };
 
     setErrors(newErrors);
@@ -156,8 +164,8 @@ const HealthCheckIn = () => {
           age: parseInt(formData.age),
           SystolicBP: parseInt(formData.systolic),
           DiastolicBP: parseInt(formData.diastolic),
-          BS: 0,
-          BodyTemp: 0,
+          BS: parseInt(formData.bloodSugar),
+          BodyTemp: parseFloat(formData.bodyTemperature),
           HeartRate: parseInt(formData.heartbeat)
         }),
       });
@@ -177,7 +185,8 @@ const HealthCheckIn = () => {
           systolic: formData.systolic,
           diastolic: formData.diastolic,
           heartbeat: formData.heartbeat,
-          blood_pressure: formData.bloodPressure,
+          blood_sugar: formData.bloodSugar,
+          body_temperature: formData.bodyTemperature,
           prediction_result: predictionData.prediction || predictionData.risk_level,
           risk_level: predictionData.risk_level || predictionData.prediction,
           user_id: (await supabase.auth.getUser()).data.user?.id
@@ -220,14 +229,16 @@ const HealthCheckIn = () => {
       systolic: '',
       diastolic: '',
       heartbeat: '',
-      bloodPressure: ''
+      bloodSugar: '',
+      bodyTemperature: ''
     });
     setErrors({
       age: '',
       systolic: '',
       diastolic: '',
       heartbeat: '',
-      bloodPressure: ''
+      bloodSugar: '',
+      bodyTemperature: ''
     });
     setPredictionResult(null);
   };
@@ -238,7 +249,8 @@ const HealthCheckIn = () => {
       systolic: formData.systolic ? `${formData.systolic} mmHg` : '',
       diastolic: formData.diastolic ? `${formData.diastolic} mmHg` : '',
       heartbeat: formData.heartbeat ? `${formData.heartbeat} bpm` : '',
-      bloodPressure: formData.bloodPressure ? `${formData.bloodPressure} mmHg` : '',
+      bloodSugar: formData.bloodSugar ? `${formData.bloodSugar} mg/dL` : '',
+      bodyTemperature: formData.bodyTemperature ? `${formData.bodyTemperature}°F` : '',
       riskLevel: predictionResult?.prediction || predictionResult?.risk_level || 'Assessment Complete'
     };
   };
@@ -445,28 +457,53 @@ const HealthCheckIn = () => {
                       )}
                     </div>
 
-                    {/* Blood Pressure Field */}
+                    {/* Blood Sugar Field */}
                     <div>
                       <label className="block font-poppins text-gray-700 mb-3 text-lg">
-                        Blood Pressure <span className="text-gray-500">mmHg</span> <span className="text-red-400">*</span>
+                        Blood Sugar <span className="text-gray-500">mg/dL</span> <span className="text-red-400">*</span>
                       </label>
                       <Input
-                        id="bloodPressure"
+                        id="bloodSugar"
                         type="text"
-                        placeholder="mmHg"
-                        value={formData.bloodPressure}
-                        onChange={(e) => handleInputChange('bloodPressure', e.target.value)}
-                        onBlur={(e) => handleBlur('bloodPressure', e.target.value)}
+                        placeholder="mg/dL"
+                        value={formData.bloodSugar}
+                        onChange={(e) => handleInputChange('bloodSugar', e.target.value)}
+                        onBlur={(e) => handleBlur('bloodSugar', e.target.value)}
                         className={`border-0 border-b-2 rounded-none bg-transparent px-0 py-3 text-lg focus:ring-0 placeholder:text-teal-300 ${
-                          errors.bloodPressure ? 'border-red-300 focus:border-red-400' : 'border-gray-300 focus:border-teal-400'
+                          errors.bloodSugar ? 'border-red-300 focus:border-red-400' : 'border-gray-300 focus:border-teal-400'
                         }`}
                         style={{ 
                           borderRadius: '0',
                           boxShadow: 'none'
                         }}
                       />
-                      {errors.bloodPressure && (
-                        <p className="mt-2 text-sm text-red-500 font-poppins">{errors.bloodPressure}</p>
+                      {errors.bloodSugar && (
+                        <p className="mt-2 text-sm text-red-500 font-poppins">{errors.bloodSugar}</p>
+                      )}
+                    </div>
+
+                    {/* Body Temperature Field */}
+                    <div>
+                      <label className="block font-poppins text-gray-700 mb-3 text-lg">
+                        Body Temperature <span className="text-gray-500">°F</span> <span className="text-red-400">*</span>
+                      </label>
+                      <Input
+                        id="bodyTemperature"
+                        type="text"
+                        placeholder="°F"
+                        value={formData.bodyTemperature}
+                        onChange={(e) => handleInputChange('bodyTemperature', e.target.value)}
+                        onBlur={(e) => handleBlur('bodyTemperature', e.target.value)}
+                        className={`border-0 border-b-2 rounded-none bg-transparent px-0 py-3 text-lg focus:ring-0 placeholder:text-teal-300 ${
+                          errors.bodyTemperature ? 'border-red-300 focus:border-red-400' : 'border-gray-300 focus:border-teal-400'
+                        }`}
+                        style={{ 
+                          borderRadius: '0',
+                          boxShadow: 'none'
+                        }}
+                      />
+                      {errors.bodyTemperature && (
+                        <p className="mt-2 text-sm text-red-500 font-poppins">{errors.bodyTemperature}</p>
                       )}
                     </div>
                   </div>

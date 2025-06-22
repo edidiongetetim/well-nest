@@ -29,7 +29,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     systolic: '',
     diastolic: '',
     heartbeat: '',
-    bloodPressure: ''
+    bloodSugar: '',
+    bodyTemperature: ''
   });
 
   const [errors, setErrors] = useState({
@@ -37,7 +38,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     systolic: '',
     diastolic: '',
     heartbeat: '',
-    bloodPressure: ''
+    bloodSugar: '',
+    bodyTemperature: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -75,9 +77,14 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
           return 'Please enter a valid heart rate (30-300)';
         }
         break;
-      case 'bloodPressure':
-        if (numValue < 50 || numValue > 300) {
-          return 'Please enter a valid blood pressure';
+      case 'bloodSugar':
+        if (numValue < 70 || numValue > 400) {
+          return 'Please enter a valid blood sugar level (70-400 mg/dL)';
+        }
+        break;
+      case 'bodyTemperature':
+        if (numValue < 95 || numValue > 105) {
+          return 'Please enter a valid body temperature (95-105°F)';
         }
         break;
     }
@@ -114,7 +121,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
       systolic: validateField('systolic', formData.systolic),
       diastolic: validateField('diastolic', formData.diastolic),
       heartbeat: validateField('heartbeat', formData.heartbeat),
-      bloodPressure: validateField('bloodPressure', formData.bloodPressure)
+      bloodSugar: validateField('bloodSugar', formData.bloodSugar),
+      bodyTemperature: validateField('bodyTemperature', formData.bodyTemperature)
     };
 
     setErrors(newErrors);
@@ -130,14 +138,16 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
       systolic: '',
       diastolic: '',
       heartbeat: '',
-      bloodPressure: ''
+      bloodSugar: '',
+      bodyTemperature: ''
     });
     setErrors({
       age: '',
       systolic: '',
       diastolic: '',
       heartbeat: '',
-      bloodPressure: ''
+      bloodSugar: '',
+      bodyTemperature: ''
     });
     setShowConfirmation(false);
     setPredictionResult(null);
@@ -173,8 +183,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
           age: parseInt(formData.age),
           SystolicBP: parseInt(formData.systolic),
           DiastolicBP: parseInt(formData.diastolic),
-          BS: 0,
-          BodyTemp: 0,
+          BS: parseInt(formData.bloodSugar),
+          BodyTemp: parseFloat(formData.bodyTemperature),
           HeartRate: parseInt(formData.heartbeat)
         }),
       });
@@ -199,7 +209,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
           systolic: formData.systolic,
           diastolic: formData.diastolic,
           heartbeat: formData.heartbeat,
-          blood_pressure: formData.bloodPressure,
+          blood_sugar: formData.bloodSugar,
+          body_temperature: formData.bodyTemperature,
           prediction_result: predictionData.prediction || predictionData.risk_level,
           risk_level: predictionData.risk_level || predictionData.prediction,
           user_id: user?.id
@@ -294,9 +305,13 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
                   <span className="font-poppins text-gray-600">Heart Rate:</span>
                   <span className="font-poppins font-medium ml-2">{formData.heartbeat} BPM</span>
                 </div>
-                <div className="col-span-2">
-                  <span className="font-poppins text-gray-600">Blood Pressure:</span>
-                  <span className="font-poppins font-medium ml-2">{formData.bloodPressure} mmHg</span>
+                <div>
+                  <span className="font-poppins text-gray-600">Blood Sugar:</span>
+                  <span className="font-poppins font-medium ml-2">{formData.bloodSugar} mg/dL</span>
+                </div>
+                <div>
+                  <span className="font-poppins text-gray-600">Body Temperature:</span>
+                  <span className="font-poppins font-medium ml-2">{formData.bodyTemperature}°F</span>
                 </div>
               </div>
             </div>
@@ -424,23 +439,43 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
                 )}
               </div>
 
-              {/* Blood Pressure Field */}
+              {/* Blood Sugar Field */}
               <div>
                 <label className="block font-poppins text-gray-700 mb-2 text-sm font-medium">
-                  Blood Pressure <span className="text-gray-500">mmHg</span> <span className="text-red-400">*</span>
+                  Blood Sugar <span className="text-gray-500">mg/dL</span> <span className="text-red-400">*</span>
                 </label>
                 <Input
                   type="text"
-                  placeholder="mmHg"
-                  value={formData.bloodPressure}
-                  onChange={(e) => handleInputChange('bloodPressure', e.target.value)}
-                  onBlur={(e) => handleBlur('bloodPressure', e.target.value)}
+                  placeholder="mg/dL"
+                  value={formData.bloodSugar}
+                  onChange={(e) => handleInputChange('bloodSugar', e.target.value)}
+                  onBlur={(e) => handleBlur('bloodSugar', e.target.value)}
                   className={`${
-                    errors.bloodPressure ? 'border-red-300 focus:border-red-400' : 'border-gray-300 focus:border-teal-400'
+                    errors.bloodSugar ? 'border-red-300 focus:border-red-400' : 'border-gray-300 focus:border-teal-400'
                   }`}
                 />
-                {errors.bloodPressure && (
-                  <p className="mt-1 text-sm text-red-500 font-poppins">{errors.bloodPressure}</p>
+                {errors.bloodSugar && (
+                  <p className="mt-1 text-sm text-red-500 font-poppins">{errors.bloodSugar}</p>
+                )}
+              </div>
+
+              {/* Body Temperature Field */}
+              <div>
+                <label className="block font-poppins text-gray-700 mb-2 text-sm font-medium">
+                  Body Temperature <span className="text-gray-500">°F</span> <span className="text-red-400">*</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="°F"
+                  value={formData.bodyTemperature}
+                  onChange={(e) => handleInputChange('bodyTemperature', e.target.value)}
+                  onBlur={(e) => handleBlur('bodyTemperature', e.target.value)}
+                  className={`${
+                    errors.bodyTemperature ? 'border-red-300 focus:border-red-400' : 'border-gray-300 focus:border-teal-400'
+                  }`}
+                />
+                {errors.bodyTemperature && (
+                  <p className="mt-1 text-sm text-red-500 font-poppins">{errors.bodyTemperature}</p>
                 )}
               </div>
             </div>
