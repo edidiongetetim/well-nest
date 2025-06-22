@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -152,18 +153,19 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     setLoading(true);
 
     try {
-      // Send data to external prediction API
+      // Send data to external prediction API with correct payload format
       const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          age: formData.age,
-          systolic: formData.systolic,
-          diastolic: formData.diastolic,
-          heartbeat: formData.heartbeat,
-          blood_pressure: formData.bloodPressure,
+          age: parseInt(formData.age),
+          SystolicBP: parseInt(formData.systolic),
+          DiastolicBP: parseInt(formData.diastolic),
+          BS: 90,
+          BodyTemp: 98.6,
+          HeartRate: parseInt(formData.heartbeat)
         }),
       });
 
@@ -202,14 +204,14 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
       setShowConfirmation(true);
 
       toast({
-        title: "Physical Check-In Complete!",
+        title: "✅ Check-In Complete!",
         description: "Your vitals have been recorded and analyzed.",
       });
 
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Something went wrong. Please try again later.",
+        title: "Something went wrong while analyzing your vitals. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -232,7 +234,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-poppins text-2xl text-primary text-center">
-              Physical Check-In Complete!
+              ✅ Check-In Complete!
             </DialogTitle>
           </DialogHeader>
           

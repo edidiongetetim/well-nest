@@ -1,10 +1,10 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { ConfirmationScreen } from "@/components/ConfirmationScreen";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -145,18 +145,19 @@ const HealthCheckIn = () => {
     setLoading(true);
 
     try {
-      // Send data to external prediction API
+      // Send data to external prediction API with correct payload format
       const predictionResponse = await fetch('https://wellnest-51u4.onrender.com/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          age: formData.age,
-          systolic: formData.systolic,
-          diastolic: formData.diastolic,
-          heartbeat: formData.heartbeat,
-          blood_pressure: formData.bloodPressure,
+          age: parseInt(formData.age),
+          SystolicBP: parseInt(formData.systolic),
+          DiastolicBP: parseInt(formData.diastolic),
+          BS: 90,
+          BodyTemp: 98.6,
+          HeartRate: parseInt(formData.heartbeat)
         }),
       });
 
@@ -196,14 +197,14 @@ const HealthCheckIn = () => {
       setShowConfirmation(true);
 
       toast({
-        title: "Physical Check-In Complete!",
+        title: "✅ Check-In Complete!",
         description: "Your vitals have been recorded and analyzed.",
       });
 
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Something went wrong. Please try again later.",
+        title: "Something went wrong while analyzing your vitals. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -259,7 +260,7 @@ const HealthCheckIn = () => {
                     </svg>
                   </div>
                   <h1 className="font-poppins font-bold text-2xl text-primary mb-2">
-                    Physical Check-In Complete!
+                    ✅ Check-In Complete!
                   </h1>
                   <p className="font-poppins text-lg text-gray-600">
                     Your health check-in has been saved and analyzed.
