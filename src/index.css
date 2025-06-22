@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -54,14 +55,14 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 7.1%;
+    --foreground: 0 0% 86.7%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 11.8%;
+    --card-foreground: 0 0% 86.7%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 11.8%;
+    --popover-foreground: 0 0% 86.7%;
 
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
@@ -94,10 +95,23 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-all duration-300 ease-in-out;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-all duration-300 ease-in-out;
   }
+}
+
+/* Navigation hover styles */
+.nav-link {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.nav-link:hover {
+  @apply text-purple-600;
+}
+
+.nav-link.active {
+  @apply text-purple-600 font-bold;
 }

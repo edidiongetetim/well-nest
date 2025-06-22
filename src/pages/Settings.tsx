@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,8 +32,7 @@ export default function Settings() {
   const [communityUpdates, setCommunityUpdates] = useState(true);
   const [reminderSchedule, setReminderSchedule] = useState("1hr");
 
-  // App preferences state
-  const [theme, setTheme] = useState("light");
+  // App preferences state (theme is now handled by ThemeContext)
   const [language, setLanguage] = useState("en");
   const [units, setUnits] = useState("metric");
 
@@ -70,7 +70,6 @@ export default function Settings() {
 
         // Load app preferences
         const appPrefs = profileData.app_preferences as any || {};
-        setTheme(appPrefs.theme || "light");
         setLanguage(appPrefs.language || "en");
         setUnits(appPrefs.units || "metric");
 
@@ -100,7 +99,6 @@ export default function Settings() {
               reminder_schedule: reminderSchedule
             },
             app_preferences: {
-              theme,
               language,
               units,
               profile_visibility: profileVisibility,
@@ -142,13 +140,13 @@ export default function Settings() {
   if (!user) {
     return (
       <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
+        <div className="min-h-screen flex w-full bg-background transition-all duration-300 ease-in-out">
           <AppSidebar />
           <div className="flex-1 flex flex-col">
             <DashboardHeader />
             <main className="flex-1 p-6">
               <div className="max-w-4xl mx-auto">
-                <p className="font-poppins text-gray-600">Please log in to access settings.</p>
+                <p className="font-poppins text-muted-foreground">Please log in to access settings.</p>
               </div>
             </main>
           </div>
@@ -159,7 +157,7 @@ export default function Settings() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-background transition-all duration-300 ease-in-out">
         <AppSidebar />
         
         <div className="flex-1 flex flex-col">
@@ -168,9 +166,9 @@ export default function Settings() {
           <main className="flex-1 p-6">
             <div className="max-w-4xl mx-auto">
               {/* Sticky Header */}
-              <div className="sticky top-0 bg-gray-50 z-10 pb-6 mb-6 border-b border-gray-200">
+              <div className="sticky top-0 bg-background z-10 pb-6 mb-6 border-b border-border transition-all duration-300 ease-in-out">
                 <h1 className="font-poppins font-bold text-3xl text-primary mb-2">Settings</h1>
-                <p className="font-poppins text-gray-600">Manage your account, privacy, and WellNest preferences.</p>
+                <p className="font-poppins text-muted-foreground">Manage your account, privacy, and WellNest preferences.</p>
               </div>
 
               {/* Settings Sections */}
@@ -183,12 +181,12 @@ export default function Settings() {
                   setNewPassword={setNewPassword}
                   confirmPassword={confirmPassword}
                   setConfirmPassword={setConfirmPassword}
-                  onExportData={() => {}} // This is now handled in DataManagementSection
+                  onExportData={() => {}}
                   onDeleteAccount={() => setShowDeleteModal(true)}
                 />
 
                 <DataManagementSection
-                  onExportData={() => {}} // Export is now handled internally
+                  onExportData={() => {}}
                   onDeleteAccount={() => setShowDeleteModal(true)}
                 />
 
@@ -213,8 +211,6 @@ export default function Settings() {
                 />
 
                 <AppPreferencesSection
-                  theme={theme}
-                  setTheme={setTheme}
                   language={language}
                   setLanguage={setLanguage}
                   units={units}
@@ -222,12 +218,12 @@ export default function Settings() {
                 />
 
                 {/* Save Button */}
-                <Card className="bg-white shadow-sm border border-gray-100">
+                <Card className="bg-card shadow-sm border border-border transition-all duration-300 ease-in-out">
                   <CardContent className="p-6">
                     <Button
                       onClick={handleSaveSettings}
                       disabled={loading}
-                      className="w-full font-poppins bg-primary hover:bg-primary/90 transition-colors"
+                      className="w-full font-poppins bg-primary hover:bg-primary/90 transition-all duration-300 ease-in-out"
                     >
                       {loading ? "Saving..." : "Save Settings"}
                     </Button>

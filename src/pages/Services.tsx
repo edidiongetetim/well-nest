@@ -48,19 +48,9 @@ const Services = () => {
                 {service.title}
               </h3>
               
-              {/* Editable text area for easy customization */}
-              <div className="space-y-4">
-                <p className="font-poppins text-gray-700 leading-relaxed">
-                  {service.description}
-                </p>
-                
-                {/* Note: The text above can be easily edited by changing the description in the services array */}
-                <div className="pt-4 border-t border-gray-100">
-                  <p className="font-poppins text-xs text-gray-500 italic">
-                    💡 To customize this content, edit the services array in Services.tsx
-                  </p>
-                </div>
-              </div>
+              <p className="font-poppins text-gray-700 leading-relaxed">
+                {service.description}
+              </p>
             </div>
           ))}
         </div>

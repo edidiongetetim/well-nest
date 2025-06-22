@@ -9,10 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface AppPreferencesSectionProps {
-  theme: string;
-  setTheme: (value: string) => void;
   language: string;
   setLanguage: (value: string) => void;
   units: string;
@@ -20,29 +19,29 @@ interface AppPreferencesSectionProps {
 }
 
 export const AppPreferencesSection = ({
-  theme,
-  setTheme,
   language,
   setLanguage,
   units,
   setUnits
 }: AppPreferencesSectionProps) => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
-    <Card className="bg-white shadow-sm border border-gray-100 animate-fade-in">
-      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+    <Card className="bg-card shadow-sm border border-border animate-fade-in transition-all duration-300 ease-in-out">
+      <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 transition-all duration-300 ease-in-out">
         <CardTitle className="font-poppins text-xl text-primary">App Preferences</CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <Label className="font-poppins font-medium">Dark Mode</Label>
-            <p className="font-poppins text-sm text-gray-600">
+            <p className="font-poppins text-sm text-muted-foreground">
               Switch between light and dark theme
             </p>
           </div>
           <Switch
             checked={theme === "dark"}
-            onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+            onCheckedChange={toggleTheme}
           />
         </div>
 
@@ -66,7 +65,7 @@ export const AppPreferencesSection = ({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <Label className="font-poppins font-medium">Measurement Units</Label>
-            <p className="font-poppins text-sm text-gray-600">
+            <p className="font-poppins text-sm text-muted-foreground">
               Choose between metric and imperial units
             </p>
           </div>
@@ -76,8 +75,8 @@ export const AppPreferencesSection = ({
           />
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="font-poppins text-sm text-gray-600">
+        <div className="bg-muted p-4 rounded-lg transition-all duration-300 ease-in-out">
+          <p className="font-poppins text-sm text-muted-foreground">
             <span className="font-medium">Current units:</span> {units === "metric" ? "Metric (kg, cm, °C)" : "Imperial (lbs, ft/in, °F)"}
           </p>
         </div>
