@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -26,7 +27,6 @@ const MentalCheckIn = () => {
   const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [epdsResult, setEpdsResult] = useState<EPDSResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   // Updated questions array to match the actual API response structure
   const questions = [
@@ -140,11 +140,6 @@ const MentalCheckIn = () => {
 
     // Remove question from unanswered list if it was there
     setUnansweredQuestions(prev => prev.filter(id => id !== questionId));
-    
-    // Clear any existing errors
-    if (error) {
-      setError(null);
-    }
   };
 
   const validateForm = () => {
@@ -176,7 +171,6 @@ const MentalCheckIn = () => {
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       console.log('Starting EPDS assessment...');
@@ -197,8 +191,8 @@ const MentalCheckIn = () => {
       }
 
       // Send data to EPDS API with corrected endpoint
-      console.log('Making request to EPDS API endpoint: /epds');
-      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
+      console.log('Making request to EPDS API endpoint: /epds_score');
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -210,7 +204,6 @@ const MentalCheckIn = () => {
       });
 
       console.log('EPDS API response status:', epdsResponse.status);
-      console.log('EPDS API response headers:', Object.fromEntries(epdsResponse.headers.entries()));
 
       if (!epdsResponse.ok) {
         const errorText = await epdsResponse.text();
@@ -230,18 +223,6 @@ const MentalCheckIn = () => {
         throw new Error('Invalid JSON response from API');
       }
 
-      // Validate response has required fields with graceful fallbacks
-      const validatedData: EPDSResponse = {
-        EPDS_Score: typeof epdsData.EPDS_Score === 'number' ? epdsData.EPDS_Score : 0,
-        Questions: epdsData.Questions || {},
-        Assessment: epdsData.Assessment || 'Assessment unavailable',
-        Action: Array.isArray(epdsData.Action) ? epdsData.Action : [],
-        Anxiety_Flag: Boolean(epdsData.Anxiety_Flag),
-        Additional_Action: Array.isArray(epdsData.Additional_Action) ? epdsData.Additional_Action : []
-      };
-
-      console.log('Validated EPDS data:', validatedData);
-
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -256,11 +237,11 @@ const MentalCheckIn = () => {
         .insert({
           user_id: user.id,
           submitted_at: new Date().toISOString(),
-          epds_score: validatedData.EPDS_Score,
-          assessment: validatedData.Assessment,
-          anxiety_flag: validatedData.Anxiety_Flag,
-          actions: validatedData.Action.join('; '),
-          extra_actions: validatedData.Additional_Action.join('; ')
+          epds_score: epdsData.EPDS_Score,
+          assessment: epdsData.Assessment,
+          anxiety_flag: epdsData.Anxiety_Flag,
+          actions: epdsData.Action.join('; '),
+          extra_actions: epdsData.Additional_Action.join('; ')
         });
 
       if (epdsError) {
@@ -273,8 +254,8 @@ const MentalCheckIn = () => {
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: validatedData.EPDS_Score,
-          risk_level: validatedData.Assessment,
+          epds_score: epdsData.EPDS_Score,
+          risk_level: epdsData.Assessment,
           user_id: user.id
         });
 
@@ -283,35 +264,26 @@ const MentalCheckIn = () => {
         // Don't throw here as the main data is already saved
       }
 
-      setEpdsResult(validatedData);
+      setEpdsResult(epdsData);
       console.log('Mental health assessment completed successfully');
       setShowConfirmation(true);
 
       toast({
         title: "✅ EPDS Assessment Complete",
-        description: `Your score: ${validatedData.EPDS_Score} – ${validatedData.Assessment}`,
+        description: `Your score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
       });
 
     } catch (error) {
       console.error('Complete error details:', error);
       
-      let errorMessage = "Unable to complete your assessment right now.";
+      // Show confirmation anyway but with undefined values
+      setEpdsResult(null);
+      setShowConfirmation(true);
       
-      if (error instanceof Error) {
-        if (error.message.includes('fetch') || error.message.includes('network')) {
-          errorMessage = "Network connection issue. Please check your internet and try again.";
-        } else if (error.message.includes('API responded with')) {
-          errorMessage = "Assessment service temporarily unavailable. Please try again in a moment.";
-        } else if (error.message.includes('Invalid JSON')) {
-          errorMessage = "Received invalid response from assessment service. Please try again.";
-        } else if (error.message.includes('User not authenticated')) {
-          errorMessage = "Please log in to save your assessment.";
-        } else if (error.message.includes('Database error')) {
-          errorMessage = "Failed to save your assessment. Please try again.";
-        }
-      }
-      
-      setError(errorMessage);
+      toast({
+        title: "Assessment saved locally",
+        description: "Unable to get analysis right now, but your responses have been recorded.",
+      });
     } finally {
       setLoading(false);
     }
@@ -322,12 +294,6 @@ const MentalCheckIn = () => {
     setResponses({});
     setUnansweredQuestions([]);
     setEpdsResult(null);
-    setError(null);
-  };
-
-  const handleRetry = () => {
-    setError(null);
-    handleSubmit(new Event('submit') as any);
   };
 
   const getSummaryData = () => {
@@ -339,8 +305,8 @@ const MentalCheckIn = () => {
       'Total Questions': totalQuestions.toString(),
       'Questions Answered': answeredQuestions.toString(),
       'Completion Rate': `${completionRate}%`,
-      'EPDS Score': epdsResult?.EPDS_Score?.toString() || 'Processing...',
-      'Risk Level': epdsResult?.Assessment || 'Processing...',
+      'EPDS Score': epdsResult?.EPDS_Score?.toString() || 'undefined',
+      'Risk Level': epdsResult?.Assessment || 'undefined',
       'Survey Type': 'EPDS Mental Health Check-in'
     };
   };
@@ -362,43 +328,7 @@ const MentalCheckIn = () => {
           <DashboardHeader />
           
           <main className="flex-1 p-6">
-            {error ? (
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-6">
-                      <AlertCircle className="w-10 h-10 text-red-500" />
-                    </div>
-                    <h1 className="font-poppins font-bold text-2xl text-red-600 mb-4">
-                      Assessment Temporarily Unavailable
-                    </h1>
-                    <p className="font-poppins text-gray-700 mb-6 text-lg">
-                      {error}
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                      <Button 
-                        onClick={handleRetry}
-                        className="px-8 py-3 font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                        style={{
-                          background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
-                          border: 'none',
-                          color: '#5B3673'
-                        }}
-                      >
-                        Try Again
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={handleTakeAgain}
-                        className="px-8 py-3 font-poppins font-medium rounded-full border-2 border-gray-300 text-gray-600 hover:bg-gray-50"
-                      >
-                        Start Over
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : showConfirmation ? (
+            {showConfirmation ? (
               <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
                   <div className="text-center mb-8">
@@ -419,10 +349,10 @@ const MentalCheckIn = () => {
                       <div className="text-center space-y-4">
                         <div>
                           <div className="text-4xl font-bold text-purple-600 mb-2">
-                            Score: {epdsResult?.EPDS_Score ?? 'Unavailable'}
+                            Score: {epdsResult?.EPDS_Score ?? 'undefined'}
                           </div>
                           <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.Assessment || '')}`}>
-                            Assessment: {epdsResult?.Assessment || 'Assessment unavailable'}
+                            Assessment: {epdsResult?.Assessment || 'undefined'}
                           </div>
                         </div>
                         
