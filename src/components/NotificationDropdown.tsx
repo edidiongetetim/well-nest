@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import type { Database } from "@/integrations/supabase/types";
+
+type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 
 interface Notification {
   id: string;
@@ -41,8 +44,18 @@ export function NotificationDropdown() {
       .limit(10);
 
     if (data) {
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.is_read).length);
+      // Transform the data to match our interface
+      const typedNotifications: Notification[] = data.map((notification: NotificationRow) => ({
+        id: notification.id,
+        type: notification.type as 'community_post' | 'post_like' | 'reminder',
+        title: notification.title,
+        message: notification.message,
+        is_read: notification.is_read || false,
+        created_at: notification.created_at
+      }));
+      
+      setNotifications(typedNotifications);
+      setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
     }
   };
 
