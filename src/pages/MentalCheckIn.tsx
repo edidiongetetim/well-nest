@@ -496,5 +496,6 @@ const MentalCheckIn = () => {
     </div>
   </SidebarProvider>
 );
+};
 
 export default MentalCheckIn;
