@@ -5,6 +5,7 @@ import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedAddReminderDialog } from "./EnhancedAddReminderDialog";
+import { ViewAllRemindersDialog } from "./ViewAllRemindersDialog";
 
 interface Reminder {
   id: string;
@@ -108,9 +109,11 @@ export function EnhancedReminderCard() {
                     </p>
                   </>
                 )}
-                <button className="font-poppins text-sm text-primary hover:underline mt-2">
-                  View All Reminders ({reminders.length})
-                </button>
+                <ViewAllRemindersDialog onReminderUpdated={fetchReminders}>
+                  <button className="font-poppins text-sm text-primary hover:underline mt-2">
+                    View All Reminders ({reminders.length})
+                  </button>
+                </ViewAllRemindersDialog>
               </div>
             </div>
             <EnhancedAddReminderDialog onReminderAdded={fetchReminders} />
