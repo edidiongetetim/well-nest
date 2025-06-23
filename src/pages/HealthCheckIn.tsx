@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -157,20 +156,19 @@ const HealthCheckIn = () => {
     try {
       console.log('Starting physical health prediction...');
       
-      // Convert mmol/L to mg/dL for the API (multiply by 18.018)
-      const bloodSugarMgDl = Math.round(parseFloat(formData.bloodSugar) * 18.018);
-      
-      // Prepare the payload for the API - ensuring all values are numbers
+      // Prepare the payload for the API in the exact order expected by backend
+      // FEATURE_ORDER = ['age', 'SystolicBP', 'DiastolicBP', 'BS', 'BodyTemp', 'HeartRate']
       const apiPayload = {
         age: parseInt(formData.age),
         SystolicBP: parseInt(formData.systolic),
         DiastolicBP: parseInt(formData.diastolic),
-        BS: bloodSugarMgDl,
+        BS: parseFloat(formData.bloodSugar), // Send blood sugar directly as mmol/L (NO conversion)
         BodyTemp: parseFloat(formData.bodyTemperature),
         HeartRate: parseInt(formData.heartbeat)
       };
       
-      console.log('API payload:', apiPayload);
+      console.log('API payload (blood sugar in mmol/L, no conversion):', apiPayload);
+      console.log('Blood sugar value being sent:', `${formData.bloodSugar} mmol/L -> ${apiPayload.BS}`);
       
       // Validate that all values are valid numbers
       const hasInvalidNumbers = Object.values(apiPayload).some(value => isNaN(value));
