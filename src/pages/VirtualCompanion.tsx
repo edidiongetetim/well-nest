@@ -1,12 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Heart, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -19,15 +21,17 @@ const VirtualCompanion = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm your virtual companion. I'm here to support you through your pregnancy journey. How are you feeling today?",
+      text: "Hello! I'm Nestie, your compassionate virtual companion. I'm here to support you through your wellness journey. I can help you understand your health data, remind you about appointments, and provide emotional support. How are you feeling today?",
       sender: 'bot',
       timestamp: new Date()
     }
   ]);
   const [inputText, setInputText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSendMessage = () => {
-    if (!inputText.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -38,23 +42,70 @@ const VirtualCompanion = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInputText("");
+    setIsLoading(true);
 
-    // Simulate bot response
-    setTimeout(() => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Please log in to use Nestie');
+      }
+
+      const response = await supabase.functions.invoke('nestie-chat', {
+        body: {
+          message: inputText,
+          userId: user.id
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thank you for sharing. I'm here to listen and provide support. Would you like to talk about how you're feeling or do you have any specific questions about your pregnancy?",
+        text: response.data.response,
         sender: 'bot',
         timestamp: new Date()
       };
+
       setMessages(prev => [...prev, botMessage]);
-    }, 1000);
+    } catch (error) {
+      console.error('Error communicating with Nestie:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I apologize, but I'm having trouble connecting right now. Please try again in a moment, or check your health dashboard for your latest information.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        title: "Connection Issue",
+        description: "Unable to connect to Nestie. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const quickPrompts = [
+    "How did I score on my last mental health assessment?",
+    "What were my latest vitals?",
+    "Do I have any reminders today?",
+    "I'm feeling anxious today",
+    "What actions should I take based on my last assessment?"
+  ];
+
+  const handleQuickPrompt = (prompt: string) => {
+    setInputText(prompt);
   };
 
   return (
@@ -68,12 +119,22 @@ const VirtualCompanion = () => {
           <main className="flex-1 p-6">
             <div className="max-w-4xl mx-auto h-full">
               <Card className="h-[calc(100vh-200px)] flex flex-col">
-                <CardHeader className="border-b">
-                  <CardTitle className="font-poppins text-2xl text-primary flex items-center gap-2">
-                    <Bot className="w-6 h-6" />
-                    Virtual Companion
+                <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                  <CardTitle className="font-poppins text-2xl text-primary flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <Heart className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <span>Nestie</span>
+                      <div className="flex items-center gap-1 text-sm font-normal text-gray-600">
+                        <Sparkles className="w-3 h-3" />
+                        Your Compassionate AI Companion
+                      </div>
+                    </div>
                   </CardTitle>
-                  <p className="font-poppins text-gray-600">Your AI-powered support companion for pregnancy wellness</p>
+                  <p className="font-poppins text-gray-600">
+                    Supporting you through your wellness journey with personalized insights and care
+                  </p>
                 </CardHeader>
                 
                 <CardContent className="flex-1 flex flex-col p-0">
@@ -87,20 +148,20 @@ const VirtualCompanion = () => {
                         }`}
                       >
                         {message.sender === 'bot' && (
-                          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                            <Bot className="w-4 h-4 text-white" />
+                          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <Heart className="w-4 h-4 text-white" />
                           </div>
                         )}
                         
                         <div
-                          className={`max-w-[70%] p-3 rounded-lg font-poppins ${
+                          className={`max-w-[75%] p-4 rounded-2xl font-poppins ${
                             message.sender === 'user'
-                              ? 'bg-primary text-white rounded-br-none'
-                              : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                              ? 'bg-primary text-white rounded-br-sm'
+                              : 'bg-gray-100 text-gray-800 rounded-bl-sm'
                           }`}
                         >
-                          <p className="text-sm">{message.text}</p>
-                          <span className="text-xs opacity-70 mt-1 block">
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                          <span className="text-xs opacity-70 mt-2 block">
                             {message.timestamp.toLocaleTimeString([], { 
                               hour: '2-digit', 
                               minute: '2-digit' 
@@ -115,7 +176,45 @@ const VirtualCompanion = () => {
                         )}
                       </div>
                     ))}
+                    
+                    {isLoading && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <Heart className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="bg-gray-100 p-4 rounded-2xl rounded-bl-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                            <span className="text-sm text-gray-600 font-poppins">Nestie is thinking...</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* Quick Prompts */}
+                  {messages.length <= 1 && (
+                    <div className="px-4 pb-2">
+                      <p className="font-poppins text-sm text-gray-600 mb-2">Try asking:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {quickPrompts.map((prompt, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleQuickPrompt(prompt)}
+                            className="font-poppins text-xs rounded-full"
+                          >
+                            {prompt}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Input Area */}
                   <div className="border-t p-4">
@@ -124,15 +223,20 @@ const VirtualCompanion = () => {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        placeholder="Type your message here..."
+                        placeholder="Share how you're feeling or ask about your health data..."
                         className="font-poppins"
+                        disabled={isLoading}
                       />
-                      <Button onClick={handleSendMessage} className="px-4">
+                      <Button 
+                        onClick={handleSendMessage} 
+                        className="px-4"
+                        disabled={isLoading || !inputText.trim()}
+                      >
                         <Send className="w-4 h-4" />
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-2 font-poppins">
-                      💡 This is a demo interface. In a real implementation, this would connect to an AI service.
+                      💜 Nestie has access to your health data to provide personalized support
                     </p>
                   </div>
                 </CardContent>
