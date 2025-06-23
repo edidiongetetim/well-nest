@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -70,8 +71,8 @@ const HealthCheckIn = () => {
         }
         break;
       case 'bloodSugar':
-        if (numValue < 70 || numValue > 400) {
-          return 'Please enter a valid blood sugar level (70-400 mg/dL)';
+        if (numValue < 3.0 || numValue > 10.0) {
+          return 'Please enter a valid blood sugar level (3.0-10.0 mmol/L)';
         }
         break;
       case 'bodyTemperature':
@@ -156,12 +157,15 @@ const HealthCheckIn = () => {
     try {
       console.log('Starting physical health prediction...');
       
+      // Convert mmol/L to mg/dL for the API (multiply by 18.018)
+      const bloodSugarMgDl = Math.round(parseFloat(formData.bloodSugar) * 18.018);
+      
       // Prepare the payload for the API - ensuring all values are numbers
       const apiPayload = {
         age: parseInt(formData.age),
         SystolicBP: parseInt(formData.systolic),
         DiastolicBP: parseInt(formData.diastolic),
-        BS: parseInt(formData.bloodSugar),
+        BS: bloodSugarMgDl,
         BodyTemp: parseFloat(formData.bodyTemperature),
         HeartRate: parseInt(formData.heartbeat)
       };
@@ -323,7 +327,7 @@ const HealthCheckIn = () => {
       systolic: formData.systolic ? `${formData.systolic} mmHg` : '',
       diastolic: formData.diastolic ? `${formData.diastolic} mmHg` : '',
       heartbeat: formData.heartbeat ? `${formData.heartbeat} bpm` : '',
-      bloodSugar: formData.bloodSugar ? `${formData.bloodSugar} mg/dL` : '',
+      bloodSugar: formData.bloodSugar ? `${formData.bloodSugar} mmol/L` : '',
       bodyTemperature: formData.bodyTemperature ? `${formData.bodyTemperature}°F` : '',
       riskLevel: predictionResult?.prediction || predictionResult?.risk_level || 'Assessment Complete'
     };
@@ -534,12 +538,12 @@ const HealthCheckIn = () => {
                     {/* Blood Sugar Field */}
                     <div>
                       <label className="block font-poppins text-gray-700 mb-3 text-lg">
-                        Blood Sugar <span className="text-gray-500">mg/dL</span> <span className="text-red-400">*</span>
+                        Blood Sugar <span className="text-gray-500">mmol/L</span> <span className="text-red-400">*</span>
                       </label>
                       <Input
                         id="bloodSugar"
                         type="text"
-                        placeholder="mg/dL"
+                        placeholder="e.g. 5.5"
                         value={formData.bloodSugar}
                         onChange={(e) => handleInputChange('bloodSugar', e.target.value)}
                         onBlur={(e) => handleBlur('bloodSugar', e.target.value)}

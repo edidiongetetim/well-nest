@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -77,8 +78,8 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
         }
         break;
       case 'bloodSugar':
-        if (numValue < 70 || numValue > 400) {
-          return 'Please enter a valid blood sugar level (70-400 mg/dL)';
+        if (numValue < 3.0 || numValue > 10.0) {
+          return 'Please enter a valid blood sugar level (3.0-10.0 mmol/L)';
         }
         break;
       case 'bodyTemperature':
@@ -171,12 +172,15 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
     try {
       console.log('Starting API request...');
       
+      // Convert mmol/L to mg/dL for the API (multiply by 18.018)
+      const bloodSugarMgDl = Math.round(parseFloat(formData.bloodSugar) * 18.018);
+      
       // Prepare the payload for the API - ensuring all values are numbers
       const apiPayload = {
         age: parseInt(formData.age),
         SystolicBP: parseInt(formData.systolic),
         DiastolicBP: parseInt(formData.diastolic),
-        BS: parseInt(formData.bloodSugar),
+        BS: bloodSugarMgDl,
         BodyTemp: parseFloat(formData.bodyTemperature),
         HeartRate: parseInt(formData.heartbeat)
       };
@@ -361,7 +365,7 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
                 </div>
                 <div>
                   <span className="font-poppins text-gray-600">Blood Sugar:</span>
-                  <span className="font-poppins font-medium ml-2">{formData.bloodSugar} mg/dL</span>
+                  <span className="font-poppins font-medium ml-2">{formData.bloodSugar} mmol/L</span>
                 </div>
                 <div>
                   <span className="font-poppins text-gray-600">Body Temperature:</span>
@@ -496,11 +500,11 @@ export const HealthCheckInModal = ({ open, onOpenChange }: HealthCheckInModalPro
               {/* Blood Sugar Field */}
               <div>
                 <label className="block font-poppins text-gray-700 mb-2 text-sm font-medium">
-                  Blood Sugar <span className="text-gray-500">mg/dL</span> <span className="text-red-400">*</span>
+                  Blood Sugar <span className="text-gray-500">mmol/L</span> <span className="text-red-400">*</span>
                 </label>
                 <Input
                   type="text"
-                  placeholder="mg/dL"
+                  placeholder="e.g. 5.5"
                   value={formData.bloodSugar}
                   onChange={(e) => handleInputChange('bloodSugar', e.target.value)}
                   onBlur={(e) => handleBlur('bloodSugar', e.target.value)}
