@@ -20,10 +20,11 @@ interface MentalHealthModalProps {
 // Updated interface to match actual API response
 interface EPDSResponse {
   EPDS_Score: number;
+  Questions: Record<string, number>;
   Assessment: string;
-  Action: string;
+  Action: string[];
   Anxiety_Flag: boolean;
-  Additional_Action: string;
+  Additional_Action: string[];
 }
 
 export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps) => {
@@ -34,7 +35,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [epdsResult, setEpdsResult] = useState<EPDSResponse | null>(null);
 
-  // ... keep existing code (questions array)
+  // Updated questions array to match the actual API response structure
   const questions = [
     {
       id: 'laughing',
@@ -48,7 +49,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     },
     {
       id: 'enjoyment',
-      question: 'I have looked forward with enjoyment to things:',
+      question: 'I have looked forward to things with enjoyment:',
       options: [
         'As much as I ever did',
         'Rather less than I used to',
@@ -91,14 +92,14 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       question: 'Things have been getting on top of me:',
       options: [
         'No, I am coping as well as ever',
-        'No, most of the time I cope quite well',
-        'Yes, sometimes I haven\'t been coping as well as usual',
-        'Yes, most of the time I haven\'t been coping at all'
+        'No, most of the time I\'m coping quite well',
+        'Yes, sometimes, I\'m not coping as well as usual',
+        'Yes, most of the time, I\'m not able to cope at all'
       ]
     },
     {
       id: 'sleeping',
-      question: 'I have been so unhappy that I have had difficulty sleeping:',
+      question: 'I have been so unhappy that I\'ve had difficulty sleeping:',
       options: [
         'No, not at all',
         'Not very often',
@@ -138,7 +139,6 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     }
   ];
 
-  // ... keep existing code (helper functions)
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({
       ...prev,
@@ -193,8 +193,8 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
       console.log('Responses array for API:', responsesArray);
 
-      // Send data to EPDS API
-      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
+      // Send data to EPDS API with updated endpoint
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,8 +233,8 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
           epds_score: epdsData.EPDS_Score,
           assessment: epdsData.Assessment,
           anxiety_flag: epdsData.Anxiety_Flag,
-          actions: epdsData.Action,
-          extra_actions: epdsData.Additional_Action
+          actions: epdsData.Action.join('; '),
+          extra_actions: epdsData.Additional_Action.join('; ')
         });
 
       if (epdsError) {
@@ -316,17 +316,31 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
                   </div>
                 </div>
                 
-                {epdsResult?.Action && (
+                {epdsResult?.Action && epdsResult.Action.length > 0 && (
                   <div className="bg-blue-50 p-4 rounded-lg mt-4">
                     <h4 className="font-poppins font-semibold text-blue-800 mb-2">Recommended Actions:</h4>
-                    <p className="font-poppins text-blue-700">{epdsResult.Action}</p>
+                    <ul className="font-poppins text-blue-700 text-left space-y-2">
+                      {epdsResult.Action.map((action, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
-                {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && (
+                {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && epdsResult.Additional_Action.length > 0 && (
                   <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
                     <h4 className="font-poppins font-semibold text-amber-800 mb-2">⚠️ Additional Support Needed:</h4>
-                    <p className="font-poppins text-amber-700">{epdsResult.Additional_Action}</p>
+                    <ul className="font-poppins text-amber-700 text-left space-y-2">
+                      {epdsResult.Additional_Action.map((action, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-amber-500 mr-2">•</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>

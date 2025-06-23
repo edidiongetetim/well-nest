@@ -191,8 +191,8 @@ const MentalCheckIn = () => {
       }
 
       // Send data to EPDS API with corrected endpoint
-      console.log('Making request to EPDS API endpoint: /epds_score');
-      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
+      console.log('Making request to EPDS API endpoint: /epds');
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,13 +276,10 @@ const MentalCheckIn = () => {
     } catch (error) {
       console.error('Complete error details:', error);
       
-      // Show confirmation anyway but with undefined values
-      setEpdsResult(null);
-      setShowConfirmation(true);
-      
       toast({
-        title: "Assessment saved locally",
-        description: "Unable to get analysis right now, but your responses have been recorded.",
+        title: "Assessment could not be processed",
+        description: "Please try again later or contact support if the issue persists.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -305,8 +302,8 @@ const MentalCheckIn = () => {
       'Total Questions': totalQuestions.toString(),
       'Questions Answered': answeredQuestions.toString(),
       'Completion Rate': `${completionRate}%`,
-      'EPDS Score': epdsResult?.EPDS_Score?.toString() || 'undefined',
-      'Risk Level': epdsResult?.Assessment || 'undefined',
+      'EPDS Score': epdsResult?.EPDS_Score?.toString() || 'Pending',
+      'Risk Level': epdsResult?.Assessment || 'Pending Analysis',
       'Survey Type': 'EPDS Mental Health Check-in'
     };
   };
@@ -349,10 +346,10 @@ const MentalCheckIn = () => {
                       <div className="text-center space-y-4">
                         <div>
                           <div className="text-4xl font-bold text-purple-600 mb-2">
-                            Score: {epdsResult?.EPDS_Score ?? 'undefined'}
+                            Score: {epdsResult?.EPDS_Score ?? 'Processing...'}
                           </div>
                           <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.Assessment || '')}`}>
-                            Assessment: {epdsResult?.Assessment || 'undefined'}
+                            Assessment: {epdsResult?.Assessment || 'Processing...'}
                           </div>
                         </div>
                         

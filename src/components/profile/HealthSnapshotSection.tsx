@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,8 +111,8 @@ export const HealthSnapshotSection = ({
     return actions.split(';').map(action => action.trim()).filter(action => action.length > 0);
   };
 
-  // Safe display function that shows "undefined" for null/undefined values
-  const safeDisplay = (value: any, fallback: string = "undefined") => {
+  // Safe display function that shows "Not available" for null/undefined values
+  const safeDisplay = (value: any, fallback: string = "Not available") => {
     if (value === null || value === undefined) return fallback;
     return value;
   };
@@ -223,6 +222,16 @@ export const HealthSnapshotSection = ({
                   </div>
                 </div>
 
+                {/* Anxiety Flag Display */}
+                {mentalRecord.anxiety_flag && (
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                    <Label className="font-poppins font-semibold text-amber-800">⚠️ Anxiety Flag Detected</Label>
+                    <p className="font-poppins text-amber-700 mt-2">
+                      Additional anxiety-related concerns have been identified in your assessment.
+                    </p>
+                  </div>
+                )}
+
                 {/* Actions */}
                 {mentalRecord.actions && parseActions(mentalRecord.actions).length > 0 && (
                   <div className="bg-blue-50 p-4 rounded-lg">
@@ -238,10 +247,10 @@ export const HealthSnapshotSection = ({
                   </div>
                 )}
 
-                {/* Anxiety Flag & Additional Actions */}
-                {mentalRecord.anxiety_flag && mentalRecord.extra_actions && parseActions(mentalRecord.extra_actions).length > 0 && (
+                {/* Additional Actions */}
+                {mentalRecord.extra_actions && parseActions(mentalRecord.extra_actions).length > 0 && (
                   <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                    <Label className="font-poppins font-semibold text-amber-800">⚠️ Additional Support Needed:</Label>
+                    <Label className="font-poppins font-semibold text-amber-800">Additional Support Needed:</Label>
                     <ul className="font-poppins text-amber-700 mt-2 space-y-1">
                       {parseActions(mentalRecord.extra_actions).map((action, index) => (
                         <li key={index} className="flex items-start">
