@@ -21,7 +21,7 @@ const VirtualCompanion = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm Nestie, your compassionate virtual companion. I'm here to support you through your wellness journey. I can help you understand your health data, remind you about appointments, and provide emotional support. How are you feeling today?",
+      text: "Hello! I'm Nestie, your compassionate virtual companion. I'm here to support you through your wellness journey. I can help you understand your health data, remind you about appointments, and provide emotional support. How are you feeling today? 💜",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -47,7 +47,15 @@ const VirtualCompanion = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('Please log in to use Nestie');
+        // Provide a response even without authentication
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: "I'd love to help you, but you'll need to sign in first so I can provide personalized support. Once you're signed in, I can access your health data and give you better guidance! 💜",
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+        return;
       }
 
       console.log('Sending message to Nestie:', inputText);
@@ -60,19 +68,19 @@ const VirtualCompanion = () => {
 
       console.log('Nestie response:', response);
 
-      if (response.error) {
-        console.error('Supabase function error:', response.error);
-        throw new Error(response.error.message || 'Failed to connect to Nestie');
-      }
+      // Always try to get a response, even if there are errors
+      let responseText = "I'm here for you! While I'm having some technical difficulties right now, I want you to know that your wellness journey matters. Please check your dashboard for your latest health information, and remember that it's okay to reach out for support when you need it. 💜";
 
-      if (response.data && response.data.error) {
-        console.error('Nestie function returned error:', response.data.error);
-        throw new Error(response.data.error);
+      if (response.data && response.data.response) {
+        responseText = response.data.response;
+      } else if (response.error) {
+        console.error('Supabase function error:', response.error);
+        responseText = "Thank you for reaching out! I'm experiencing some technical issues right now, but I'm still here to support you. Would you like to check your health dashboard or talk about how you're feeling today? Remember, you're not alone in this journey. 💜";
       }
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.data.response,
+        text: responseText,
         sender: 'bot',
         timestamp: new Date()
       };
@@ -81,33 +89,14 @@ const VirtualCompanion = () => {
     } catch (error) {
       console.error('Error communicating with Nestie:', error);
       
-      let errorMessage = "I'm having a bit of trouble connecting right now. Please check your dashboard or try again shortly.";
-      
-      if (error.message.includes('log in')) {
-        errorMessage = "Please log in to chat with Nestie.";
-      } else if (error.message.includes('API key')) {
-        errorMessage = "I'm having trouble with my AI service configuration. Please contact support if this continues.";
-      } else if (error.message.includes('rate limit')) {
-        errorMessage = "I'm getting a lot of requests right now. Please try again in a moment.";
-      } else if (error.message.includes('database') || error.message.includes('health data')) {
-        errorMessage = "I'm having trouble accessing your health data right now. Please check your dashboard or try again shortly.";
-      }
-      
-      const errorBotMessage: Message = {
+      // Always provide a supportive response
+      const supportiveMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: errorMessage,
+        text: "I'm here for you, even though I'm having some connection issues right now. Your wellness and feelings matter to me. While I work on getting back to full capacity, please remember to take care of yourself and don't hesitate to reach out to someone you trust if you need support. 💜",
         sender: 'bot',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorBotMessage]);
-      
-      toast({
-        title: "Connection Issue",
-        description: error.message.includes('API key') 
-          ? "AI service configuration issue. Please contact support if this continues."
-          : "Unable to connect to Nestie. Please try again.",
-        variant: "destructive"
-      });
+      setMessages(prev => [...prev, supportiveMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -121,11 +110,11 @@ const VirtualCompanion = () => {
   };
 
   const quickPrompts = [
-    "How did I score on my last mental health assessment?",
+    "How are you feeling today?",
     "What were my latest vitals?",
     "Do I have any reminders today?",
     "I'm feeling anxious today",
-    "What actions should I take based on my last assessment?"
+    "Can you help me with my wellness journey?"
   ];
 
   const handleQuickPrompt = (prompt: string) => {
@@ -260,7 +249,7 @@ const VirtualCompanion = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-2 font-poppins">
-                      💜 Nestie has access to your health data to provide personalized support
+                      💜 Nestie is here to support you, even when experiencing technical difficulties
                     </p>
                   </div>
                 </CardContent>
