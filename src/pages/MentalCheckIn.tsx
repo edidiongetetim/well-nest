@@ -316,187 +316,185 @@ const MentalCheckIn = () => {
     return 'text-gray-600';
   };
 
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          <DashboardHeader />
-          
-          <main className="flex-1 p-6">
-            {showConfirmation ? (
-              <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-                  <div className="text-center mb-8">
-                    <div className="w-20 h-20 mx-auto bg-gradient-to-r from-purple-100 to-lavender-100 rounded-full flex items-center justify-center mb-6">
-                      <Check className="w-10 h-10 text-purple-600" />
-                    </div>
-                    <h1 className="font-poppins font-bold text-3xl text-primary mb-4">
-                      ✅ Assessment Complete!
-                    </h1>
+ return (
+  <SidebarProvider>
+    <div className="min-h-screen flex w-full bg-gray-50">
+      <AppSidebar />
+
+      <div className="flex-1 flex flex-col">
+        <DashboardHeader />
+
+        <main className="flex-1 p-6">
+          {showConfirmation && epdsResult ? (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                <div className="text-center mb-8">
+                  <div className="w-20 h-20 mx-auto bg-gradient-to-r from-purple-100 to-lavender-100 rounded-full flex items-center justify-center mb-6">
+                    <Check className="w-10 h-10 text-purple-600" />
                   </div>
-
-                  {/* EPDS Results Display */}
-                  <div className="space-y-6">
-                    <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border">
-                      <h3 className="font-poppins font-semibold text-xl text-primary mb-4 text-center">
-                        Your EPDS Results
-                      </h3>
-                      <div className="text-center space-y-4">
-                        <div>
-                          <div className="text-4xl font-bold text-purple-600 mb-2">
-                            Score: {epdsResult?.EPDS_Score ?? 'Processing...'}
-                          </div>
-                          <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.Assessment || '')}`}>
-                            Assessment: {epdsResult?.Assessment || 'Processing...'}
-                          </div>
-                        </div>
-                        
-                        {epdsResult?.Action && epdsResult.Action.length > 0 && (
-                          <div className="bg-blue-50 p-4 rounded-lg mt-4">
-                            <h4 className="font-poppins font-semibold text-blue-800 mb-3">Recommended Actions:</h4>
-                            <ul className="font-poppins text-blue-700 text-left space-y-2">
-                              {epdsResult.Action.map((action, index) => (
-                                <li key={index} className="flex items-start">
-                                  <span className="text-blue-500 mr-2">•</span>
-                                  <span>{action}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && epdsResult.Additional_Action.length > 0 && (
-                          <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
-                            <h4 className="font-poppins font-semibold text-amber-800 mb-3">⚠️ Additional Support Needed:</h4>
-                            <ul className="font-poppins text-amber-700 text-left space-y-2">
-                              {epdsResult.Additional_Action.map((action, index) => (
-                                <li key={index} className="flex items-start">
-                                  <span className="text-amber-500 mr-2">•</span>
-                                  <span>{action}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Summary */}
-                    <ConfirmationScreen
-                      title=""
-                      summary={getSummaryData()}
-                      onTakeAgain={handleTakeAgain}
-                      hideTitle={true}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="max-w-4xl mx-auto">
-                {/* Page Title */}
-                <div className="mb-8">
-                  <h1 className="font-poppins font-bold text-3xl text-primary mb-6">
-                    Today's EPDS Check-In
+                  <h1 className="font-poppins font-bold text-3xl text-primary mb-4">
+                    ✅ Assessment Complete!
                   </h1>
-                  <h2 className="font-poppins font-bold text-xl mb-8" style={{ color: '#5B3673' }}>
-                    Please indicate how you have felt in the last 7 days:
-                  </h2>
                 </div>
 
-                {/* Validation Message */}
-                {unansweredQuestions.length > 0 && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-500" />
-                    <p className="font-poppins text-red-700">
-                      Please answer all questions before submitting. {unansweredQuestions.length} question{unansweredQuestions.length > 1 ? 's' : ''} remaining.
-                    </p>
-                  </div>
-                )}
-
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  {questions.map((q, index) => (
-                    <div 
-                      key={q.id} 
-                      id={`question-${q.id}`}
-                      className={`p-6 rounded-lg shadow-sm transition-all duration-200 ${
-                        unansweredQuestions.includes(q.id) 
-                          ? 'bg-red-50 border-2 border-red-200' 
-                          : 'bg-white border border-gray-100'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3 mb-6">
-                        <h3 className="font-poppins font-semibold text-lg flex-1" style={{ color: '#5B3673' }}>
-                          {q.question}
-                        </h3>
-                        {unansweredQuestions.includes(q.id) && (
-                          <AlertCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
-                        )}
+                {/* EPDS Results Display */}
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border">
+                    <h3 className="font-poppins font-semibold text-xl text-primary mb-4 text-center">
+                      Your EPDS Results
+                    </h3>
+                    <div className="text-center space-y-4">
+                      <div>
+                        <div className="text-4xl font-bold text-purple-600 mb-2">
+                          Score: {epdsResult.EPDS_Score}
+                        </div>
+                        <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult.Assessment)}`}>
+                          Assessment: {epdsResult.Assessment}
+                        </div>
                       </div>
-                      
-                      <RadioGroup
-                        value={responses[q.id] || ''}
-                        onValueChange={(value) => handleResponseChange(q.id, value)}
-                        className="space-y-4"
-                      >
-                        {q.options.map((option, optionIndex) => (
-                          <div key={optionIndex} className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3 flex-1">
-                              <RadioGroupItem
-                                value={optionIndex.toString()}
-                                id={`${q.id}-${optionIndex}`}
-                                className="hidden"
-                              />
-                              <label
-                                htmlFor={`${q.id}-${optionIndex}`}
-                                className="font-poppins text-gray-700 cursor-pointer flex-1"
-                              >
-                                {option}
-                              </label>
-                            </div>
-                            
-                            <button
-                              type="button"
-                              onClick={() => handleResponseChange(q.id, optionIndex.toString())}
-                              className={`w-10 h-10 rounded-full font-poppins font-semibold transition-all duration-200 ${
-                                responses[q.id] === optionIndex.toString()
-                                  ? 'bg-teal-500 text-white shadow-md'
-                                  : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-                              }`}
-                            >
-                              {optionIndex}
-                            </button>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  ))}
 
-                  {/* Submit Button */}
-                  <div className="flex justify-center pt-8 pb-12">
-                    <Button 
-                      type="submit"
-                      disabled={loading}
-                      className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
-                      style={{
-                        background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
-                        border: 'none',
-                        color: '#5B3673'
-                      }}
-                    >
-                      {loading ? 'Analyzing...' : 'Submit'}
-                    </Button>
+                      {epdsResult.Action && epdsResult.Action.length > 0 && (
+                        <div className="bg-blue-50 p-4 rounded-lg mt-4">
+                          <h4 className="font-poppins font-semibold text-blue-800 mb-3">Recommended Actions:</h4>
+                          <ul className="font-poppins text-blue-700 text-left space-y-2">
+                            {epdsResult.Action.map((action, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-blue-500 mr-2">•</span>
+                                <span>{action}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {epdsResult.Anxiety_Flag && epdsResult.Additional_Action && epdsResult.Additional_Action.length > 0 && (
+                        <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
+                          <h4 className="font-poppins font-semibold text-amber-800 mb-3">⚠️ Additional Support Needed:</h4>
+                          <ul className="font-poppins text-amber-700 text-left space-y-2">
+                            {epdsResult.Additional_Action.map((action, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-amber-500 mr-2">•</span>
+                                <span>{action}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </form>
+
+                  <ConfirmationScreen
+                    title=""
+                    summary={getSummaryData()}
+                    onTakeAgain={handleTakeAgain}
+                    hideTitle={true}
+                  />
+                </div>
               </div>
-            )}
-          </main>
-        </div>
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto">
+              {/* Page Title */}
+              <div className="mb-8">
+                <h1 className="font-poppins font-bold text-3xl text-primary mb-6">
+                  Today's EPDS Check-In
+                </h1>
+                <h2 className="font-poppins font-bold text-xl mb-8" style={{ color: '#5B3673' }}>
+                  Please indicate how you have felt in the last 7 days:
+                </h2>
+              </div>
+
+              {/* Validation Message */}
+              {unansweredQuestions.length > 0 && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                  <p className="font-poppins text-red-700">
+                    Please answer all questions before submitting. {unansweredQuestions.length} question{unansweredQuestions.length > 1 ? 's' : ''} remaining.
+                  </p>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {questions.map((q, index) => (
+                  <div
+                    key={q.id}
+                    id={`question-${q.id}`}
+                    className={`p-6 rounded-lg shadow-sm transition-all duration-200 ${
+                      unansweredQuestions.includes(q.id)
+                        ? 'bg-red-50 border-2 border-red-200'
+                        : 'bg-white border border-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3 mb-6">
+                      <h3 className="font-poppins font-semibold text-lg flex-1" style={{ color: '#5B3673' }}>
+                        {q.question}
+                      </h3>
+                      {unansweredQuestions.includes(q.id) && (
+                        <AlertCircle className="w-5 h-5 text-red-500 mt-1 flex-shrink-0" />
+                      )}
+                    </div>
+
+                    <RadioGroup
+                      value={responses[q.id] || ''}
+                      onValueChange={(value) => handleResponseChange(q.id, value)}
+                      className="space-y-4"
+                    >
+                      {q.options.map((option, optionIndex) => (
+                        <div key={optionIndex} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3 flex-1">
+                            <RadioGroupItem
+                              value={optionIndex.toString()}
+                              id={`${q.id}-${optionIndex}`}
+                              className="hidden"
+                            />
+                            <label
+                              htmlFor={`${q.id}-${optionIndex}`}
+                              className="font-poppins text-gray-700 cursor-pointer flex-1"
+                            >
+                              {option}
+                            </label>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleResponseChange(q.id, optionIndex.toString())}
+                            className={`w-10 h-10 rounded-full font-poppins font-semibold transition-all duration-200 ${
+                              responses[q.id] === optionIndex.toString()
+                                ? 'bg-teal-500 text-white shadow-md'
+                                : 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                            }`}
+                          >
+                            {optionIndex}
+                          </button>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                ))}
+
+                {/* Submit Button */}
+                <div className="flex justify-center pt-8 pb-12">
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="px-16 py-4 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+                    style={{
+                      background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
+                      border: 'none',
+                      color: '#5B3673'
+                    }}
+                  >
+                    {loading ? 'Analyzing...' : 'Submit'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+        </main>
       </div>
-    </SidebarProvider>
-  );
-};
+    </div>
+  </SidebarProvider>
+);
 
 export default MentalCheckIn;
