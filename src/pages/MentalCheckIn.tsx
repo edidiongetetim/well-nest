@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -6,16 +7,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
 import { ConfirmationScreen } from "@/components/ConfirmationScreen";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Updated interface to match the actual API response structure
 interface EPDSResponse {
   EPDS_Score: number;
+  Questions: Record<string, number>;
   Assessment: string;
-  Action: string;
+  Action: string[];
   Anxiety_Flag: boolean;
-  Additional_Action: string;
+  Additional_Action: string[];
 }
 
 const MentalCheckIn = () => {
@@ -25,6 +27,7 @@ const MentalCheckIn = () => {
   const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [epdsResult, setEpdsResult] = useState<EPDSResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Updated questions array to match the actual API response structure
   const questions = [
@@ -138,6 +141,11 @@ const MentalCheckIn = () => {
 
     // Remove question from unanswered list if it was there
     setUnansweredQuestions(prev => prev.filter(id => id !== questionId));
+    
+    // Clear any existing errors
+    if (error) {
+      setError(null);
+    }
   };
 
   const validateForm = () => {
@@ -164,12 +172,12 @@ const MentalCheckIn = () => {
         variant: "destructive",
       });
       
-      // Scroll to first unanswered question after a brief delay
       setTimeout(scrollToFirstUnanswered, 100);
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     try {
       console.log('Starting EPDS assessment...');
@@ -201,7 +209,7 @@ const MentalCheckIn = () => {
       if (!epdsResponse.ok) {
         const errorText = await epdsResponse.text();
         console.error('EPDS API error response:', errorText);
-        throw new Error(`EPDS API request failed with status: ${epdsResponse.status} - ${errorText}`);
+        throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
       }
 
       const epdsData: EPDSResponse = await epdsResponse.json();
@@ -220,7 +228,7 @@ const MentalCheckIn = () => {
         throw new Error('User not authenticated');
       }
 
-      // Save to the new mental_epds_results table
+      // Save to the mental_epds_results table
       console.log('Saving EPDS results to Supabase...');
       const { error: epdsError } = await supabase
         .from('mental_epds_results')
@@ -230,8 +238,8 @@ const MentalCheckIn = () => {
           epds_score: epdsData.EPDS_Score,
           assessment: epdsData.Assessment,
           anxiety_flag: epdsData.Anxiety_Flag,
-          actions: epdsData.Action,
-          extra_actions: epdsData.Additional_Action
+          actions: Array.isArray(epdsData.Action) ? epdsData.Action.join('; ') : epdsData.Action,
+          extra_actions: Array.isArray(epdsData.Additional_Action) ? epdsData.Additional_Action.join('; ') : epdsData.Additional_Action
         });
 
       if (epdsError) {
@@ -251,7 +259,7 @@ const MentalCheckIn = () => {
 
       if (checkinsError) {
         console.error('Supabase checkins error:', checkinsError);
-        throw new Error(`Database error: ${checkinsError.message}`);
+        // Don't throw here as the main data is already saved
       }
 
       setEpdsResult(epdsData);
@@ -266,18 +274,15 @@ const MentalCheckIn = () => {
     } catch (error) {
       console.error('Complete error details:', error);
       
-      let errorMessage = "There was an issue processing your mental health check-in.";
-      let errorDescription = "";
+      let errorMessage = "There was an issue processing your mental health assessment.";
       
       if (error instanceof Error) {
-        errorDescription = error.message;
-        
-        if (error.message.includes('fetch')) {
-          errorMessage = "Network connection issue. Please check your internet connection.";
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          errorMessage = "Network connection issue. Please check your internet connection and try again.";
         } else if (error.message.includes('API request failed')) {
-          errorMessage = "The assessment service is currently unavailable.";
+          errorMessage = "The assessment service is temporarily unavailable. Please try again in a few moments.";
         } else if (error.message.includes('Invalid response')) {
-          errorMessage = "Received invalid data from the assessment service.";
+          errorMessage = "Received invalid data from the assessment service. Please try again.";
         } else if (error.message.includes('User not authenticated')) {
           errorMessage = "Please log in to save your assessment.";
         } else if (error.message.includes('Database error')) {
@@ -285,11 +290,7 @@ const MentalCheckIn = () => {
         }
       }
       
-      toast({
-        title: errorMessage,
-        description: errorDescription,
-        variant: "destructive",
-      });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -300,6 +301,12 @@ const MentalCheckIn = () => {
     setResponses({});
     setUnansweredQuestions([]);
     setEpdsResult(null);
+    setError(null);
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    handleSubmit(new Event('submit') as any);
   };
 
   const getSummaryData = () => {
@@ -317,6 +324,14 @@ const MentalCheckIn = () => {
     };
   };
 
+  const getRiskLevelColor = (assessment: string) => {
+    const level = assessment.toLowerCase();
+    if (level.includes('low')) return 'text-green-600';
+    if (level.includes('moderate')) return 'text-yellow-600';
+    if (level.includes('high')) return 'text-red-500';
+    return 'text-gray-600';
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -326,10 +341,49 @@ const MentalCheckIn = () => {
           <DashboardHeader />
           
           <main className="flex-1 p-6">
-            {showConfirmation ? (
+            {error ? (
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-6">
+                      <AlertCircle className="w-10 h-10 text-red-500" />
+                    </div>
+                    <h1 className="font-poppins font-bold text-2xl text-red-600 mb-4">
+                      Assessment Error
+                    </h1>
+                    <p className="font-poppins text-gray-700 mb-6 text-lg">
+                      {error}
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                      <Button 
+                        onClick={handleRetry}
+                        className="px-8 py-3 font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                        style={{
+                          background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
+                          border: 'none',
+                          color: '#5B3673'
+                        }}
+                      >
+                        Try Again
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={handleTakeAgain}
+                        className="px-8 py-3 font-poppins font-medium rounded-full border-2 border-gray-300 text-gray-600 hover:bg-gray-50"
+                      >
+                        Start Over
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : showConfirmation ? (
               <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
                   <div className="text-center mb-8">
+                    <div className="w-20 h-20 mx-auto bg-gradient-to-r from-purple-100 to-lavender-100 rounded-full flex items-center justify-center mb-6">
+                      <Check className="w-10 h-10 text-purple-600" />
+                    </div>
                     <h1 className="font-poppins font-bold text-3xl text-primary mb-4">
                       ✅ Assessment Complete!
                     </h1>
@@ -346,22 +400,36 @@ const MentalCheckIn = () => {
                           <div className="text-4xl font-bold text-purple-600 mb-2">
                             Score: {epdsResult?.EPDS_Score}
                           </div>
-                          <div className="text-xl font-semibold text-gray-700">
+                          <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.Assessment || '')}`}>
                             Assessment: {epdsResult?.Assessment}
                           </div>
                         </div>
                         
-                        {epdsResult?.Action && (
+                        {epdsResult?.Action && epdsResult.Action.length > 0 && (
                           <div className="bg-blue-50 p-4 rounded-lg mt-4">
-                            <h4 className="font-poppins font-semibold text-blue-800 mb-2">Recommended Actions:</h4>
-                            <p className="font-poppins text-blue-700">{epdsResult.Action}</p>
+                            <h4 className="font-poppins font-semibold text-blue-800 mb-3">Recommended Actions:</h4>
+                            <ul className="font-poppins text-blue-700 text-left space-y-2">
+                              {epdsResult.Action.map((action, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-blue-500 mr-2">•</span>
+                                  <span>{action}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         )}
 
-                        {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && (
+                        {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && epdsResult.Additional_Action.length > 0 && (
                           <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
-                            <h4 className="font-poppins font-semibold text-amber-800 mb-2">⚠️ Additional Support Needed:</h4>
-                            <p className="font-poppins text-amber-700">{epdsResult.Additional_Action}</p>
+                            <h4 className="font-poppins font-semibold text-amber-800 mb-3">⚠️ Additional Support Needed:</h4>
+                            <ul className="font-poppins text-amber-700 text-left space-y-2">
+                              {epdsResult.Additional_Action.map((action, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-amber-500 mr-2">•</span>
+                                  <span>{action}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         )}
                       </div>

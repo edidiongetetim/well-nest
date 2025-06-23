@@ -106,6 +106,12 @@ export const HealthSnapshotSection = ({
     return bloodPressure || "Not recorded";
   };
 
+  const parseActions = (actions: string | null) => {
+    if (!actions) return [];
+    // Split by semicolon and filter out empty strings
+    return actions.split(';').map(action => action.trim()).filter(action => action.length > 0);
+  };
+
   if (loading) {
     return (
       <Card className="bg-white shadow-sm border border-gray-100">
@@ -212,18 +218,32 @@ export const HealthSnapshotSection = ({
                 </div>
 
                 {/* Actions */}
-                {mentalRecord.actions && (
+                {mentalRecord.actions && parseActions(mentalRecord.actions).length > 0 && (
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <Label className="font-poppins font-semibold text-blue-800">Recommended Actions:</Label>
-                    <p className="font-poppins text-blue-700 mt-2">{mentalRecord.actions}</p>
+                    <ul className="font-poppins text-blue-700 mt-2 space-y-1">
+                      {parseActions(mentalRecord.actions).map((action, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-blue-500 mr-2">•</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
                 {/* Anxiety Flag & Additional Actions */}
-                {mentalRecord.anxiety_flag && mentalRecord.extra_actions && (
+                {mentalRecord.anxiety_flag && mentalRecord.extra_actions && parseActions(mentalRecord.extra_actions).length > 0 && (
                   <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
                     <Label className="font-poppins font-semibold text-amber-800">⚠️ Additional Support Needed:</Label>
-                    <p className="font-poppins text-amber-700 mt-2">{mentalRecord.extra_actions}</p>
+                    <ul className="font-poppins text-amber-700 mt-2 space-y-1">
+                      {parseActions(mentalRecord.extra_actions).map((action, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-amber-500 mr-2">•</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
