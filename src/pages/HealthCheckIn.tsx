@@ -187,7 +187,7 @@ const HealthCheckIn = () => {
         },
         body: JSON.stringify(apiPayload),
         // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        signal: AbortSignal.timeout(100000) // 30 second timeout
       });
 
       console.log('API response received:', {
