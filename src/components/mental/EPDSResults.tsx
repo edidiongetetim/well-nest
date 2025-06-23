@@ -6,9 +6,9 @@ interface EPDSResponse {
   EPDS_Score: number;
   Questions: Record<string, number>;
   Assessment: string;
-  Action: string[];
+  Action: string[] | string;
   Anxiety_Flag: boolean;
-  Additional_Action: string[];
+  Additional_Action: string[] | string;
 }
 
 interface EPDSResultsProps {
@@ -19,7 +19,7 @@ interface EPDSResultsProps {
 
 const getRiskLevelColor = (assessment: string) => {
   const level = assessment.toLowerCase();
-  if (level.includes('low')) return 'text-green-600';
+  if (level.includes('low') || level.includes('unlikely')) return 'text-green-600';
   if (level.includes('moderate')) return 'text-yellow-600';
   if (level.includes('high')) return 'text-red-500';
   return 'text-gray-600';
@@ -40,7 +40,17 @@ const getSummaryData = (epdsResult: EPDSResponse, responses: Record<string, stri
   };
 };
 
+const normalizeActions = (actions: string[] | string | undefined): string[] => {
+  if (!actions) return [];
+  if (Array.isArray(actions)) return actions;
+  if (typeof actions === 'string') return [actions];
+  return [];
+};
+
 export const EPDSResults = ({ epdsResult, responses, onTakeAgain }: EPDSResultsProps) => {
+  const normalizedActions = normalizeActions(epdsResult.Action);
+  const normalizedAdditionalActions = normalizeActions(epdsResult.Additional_Action);
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
@@ -69,11 +79,11 @@ export const EPDSResults = ({ epdsResult, responses, onTakeAgain }: EPDSResultsP
                 </div>
               </div>
 
-              {epdsResult.Action && epdsResult.Action.length > 0 && (
+              {normalizedActions.length > 0 && (
                 <div className="bg-blue-50 p-4 rounded-lg mt-4">
                   <h4 className="font-poppins font-semibold text-blue-800 mb-3">Recommended Actions:</h4>
                   <ul className="font-poppins text-blue-700 text-left space-y-2">
-                    {epdsResult.Action.map((action, index) => (
+                    {normalizedActions.map((action, index) => (
                       <li key={index} className="flex items-start">
                         <span className="text-blue-500 mr-2">•</span>
                         <span>{action}</span>
@@ -83,11 +93,11 @@ export const EPDSResults = ({ epdsResult, responses, onTakeAgain }: EPDSResultsP
                 </div>
               )}
 
-              {epdsResult.Anxiety_Flag && epdsResult.Additional_Action && epdsResult.Additional_Action.length > 0 && (
+              {epdsResult.Anxiety_Flag && normalizedAdditionalActions.length > 0 && (
                 <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
                   <h4 className="font-poppins font-semibold text-amber-800 mb-3">⚠️ Additional Support Needed:</h4>
                   <ul className="font-poppins text-amber-700 text-left space-y-2">
-                    {epdsResult.Additional_Action.map((action, index) => (
+                    {normalizedAdditionalActions.map((action, index) => (
                       <li key={index} className="flex items-start">
                         <span className="text-amber-500 mr-2">•</span>
                         <span>{action}</span>

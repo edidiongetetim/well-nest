@@ -22,9 +22,9 @@ interface EPDSResponse {
   EPDS_Score: number;
   Questions: Record<string, number>;
   Assessment: string;
-  Action: string[];
+  Action: string[] | string;
   Anxiety_Flag: boolean;
-  Additional_Action: string[];
+  Additional_Action: string[] | string;
 }
 
 export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps) => {
@@ -164,10 +164,17 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
 
   const getRiskLevelColor = (assessment: string) => {
     const level = assessment.toLowerCase();
-    if (level.includes('low')) return 'text-green-600';
+    if (level.includes('low') || level.includes('unlikely')) return 'text-green-600';
     if (level.includes('moderate')) return 'text-yellow-600';
     if (level.includes('high')) return 'text-red-500';
     return 'text-gray-600';
+  };
+
+  const normalizeActions = (actions: string[] | string | undefined): string[] => {
+    if (!actions) return [];
+    if (Array.isArray(actions)) return actions;
+    if (typeof actions === 'string') return [actions];
+    return [];
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -213,8 +220,24 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
       }
 
-      const epdsData: EPDSResponse = await epdsResponse.json();
-      console.log('EPDS response:', epdsData);
+      const responseText = await epdsResponse.text();
+      console.log('Raw API response:', responseText);
+
+      let epdsData: EPDSResponse;
+      try {
+        epdsData = JSON.parse(responseText);
+        console.log('Parsed EPDS response:', epdsData);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error('Invalid JSON response from API');
+      }
+
+      // Normalize the data to handle both string and array formats
+      const normalizedData: EPDSResponse = {
+        ...epdsData,
+        Action: Array.isArray(epdsData.Action) ? epdsData.Action : (epdsData.Action ? [epdsData.Action] : []),
+        Additional_Action: Array.isArray(epdsData.Additional_Action) ? epdsData.Additional_Action : (epdsData.Additional_Action ? [epdsData.Additional_Action] : [])
+      };
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -230,11 +253,11 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         .insert({
           user_id: user.id,
           submitted_at: new Date().toISOString(),
-          epds_score: epdsData.EPDS_Score,
-          assessment: epdsData.Assessment,
-          anxiety_flag: epdsData.Anxiety_Flag,
-          actions: epdsData.Action.join('; '),
-          extra_actions: epdsData.Additional_Action.join('; ')
+          epds_score: normalizedData.EPDS_Score,
+          assessment: normalizedData.Assessment,
+          anxiety_flag: normalizedData.Anxiety_Flag,
+          actions: Array.isArray(normalizedData.Action) ? normalizedData.Action.join('; ') : (normalizedData.Action || ''),
+          extra_actions: Array.isArray(normalizedData.Additional_Action) ? normalizedData.Additional_Action.join('; ') : (normalizedData.Additional_Action || '')
         });
 
       if (epdsError) {
@@ -247,8 +270,8 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsData.EPDS_Score,
-          risk_level: epdsData.Assessment,
+          epds_score: normalizedData.EPDS_Score,
+          risk_level: normalizedData.Assessment,
           user_id: user.id
         });
 
@@ -257,12 +280,12 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       }
 
       console.log('Mental health data saved successfully');
-      setEpdsResult(epdsData);
+      setEpdsResult(normalizedData);
       setShowConfirmation(true);
 
       toast({
         title: "✅ EPDS Assessment saved and health snapshot updated",
-        description: `Your EPDS Score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
+        description: `Your EPDS Score: ${normalizedData.EPDS_Score} – ${normalizedData.Assessment}`,
       });
 
     } catch (error) {
@@ -286,6 +309,9 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
   };
 
   if (showConfirmation) {
+    const normalizedActions = normalizeActions(epdsResult?.Action);
+    const normalizedAdditionalActions = normalizeActions(epdsResult?.Additional_Action);
+
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -316,11 +342,11 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
                   </div>
                 </div>
                 
-                {epdsResult?.Action && epdsResult.Action.length > 0 && (
+                {normalizedActions.length > 0 && (
                   <div className="bg-blue-50 p-4 rounded-lg mt-4">
                     <h4 className="font-poppins font-semibold text-blue-800 mb-2">Recommended Actions:</h4>
                     <ul className="font-poppins text-blue-700 text-left space-y-2">
-                      {epdsResult.Action.map((action, index) => (
+                      {normalizedActions.map((action, index) => (
                         <li key={index} className="flex items-start">
                           <span className="text-blue-500 mr-2">•</span>
                           <span>{action}</span>
@@ -330,11 +356,11 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
                   </div>
                 )}
 
-                {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && epdsResult.Additional_Action.length > 0 && (
+                {epdsResult?.Anxiety_Flag && normalizedAdditionalActions.length > 0 && (
                   <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
                     <h4 className="font-poppins font-semibold text-amber-800 mb-2">⚠️ Additional Support Needed:</h4>
                     <ul className="font-poppins text-amber-700 text-left space-y-2">
-                      {epdsResult.Additional_Action.map((action, index) => (
+                      {normalizedAdditionalActions.map((action, index) => (
                         <li key={index} className="flex items-start">
                           <span className="text-amber-500 mr-2">•</span>
                           <span>{action}</span>

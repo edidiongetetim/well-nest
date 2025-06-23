@@ -14,9 +14,9 @@ interface EPDSResponse {
   EPDS_Score: number;
   Questions: Record<string, number>;
   Assessment: string;
-  Action: string[];
+  Action: string[] | string;
   Anxiety_Flag: boolean;
-  Additional_Action: string[];
+  Additional_Action: string[] | string;
 }
 
 const MentalCheckIn = () => {
@@ -105,6 +105,15 @@ const MentalCheckIn = () => {
         throw new Error('Invalid JSON response from API');
       }
 
+      // Normalize the data to handle both string and array formats
+      const normalizedData: EPDSResponse = {
+        ...epdsData,
+        Action: Array.isArray(epdsData.Action) ? epdsData.Action : (epdsData.Action ? [epdsData.Action] : []),
+        Additional_Action: Array.isArray(epdsData.Additional_Action) ? epdsData.Additional_Action : (epdsData.Additional_Action ? [epdsData.Additional_Action] : [])
+      };
+
+      console.log('Normalized EPDS data:', normalizedData);
+
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -119,11 +128,11 @@ const MentalCheckIn = () => {
         .insert({
           user_id: user.id,
           submitted_at: new Date().toISOString(),
-          epds_score: epdsData.EPDS_Score,
-          assessment: epdsData.Assessment,
-          anxiety_flag: epdsData.Anxiety_Flag,
-          actions: epdsData.Action.join('; '),
-          extra_actions: epdsData.Additional_Action.join('; ')
+          epds_score: normalizedData.EPDS_Score,
+          assessment: normalizedData.Assessment,
+          anxiety_flag: normalizedData.Anxiety_Flag,
+          actions: Array.isArray(normalizedData.Action) ? normalizedData.Action.join('; ') : (normalizedData.Action || ''),
+          extra_actions: Array.isArray(normalizedData.Additional_Action) ? normalizedData.Additional_Action.join('; ') : (normalizedData.Additional_Action || '')
         });
 
       if (epdsError) {
@@ -131,13 +140,15 @@ const MentalCheckIn = () => {
         throw new Error(`Database error: ${epdsError.message}`);
       }
 
+      console.log('EPDS data saved successfully to database');
+
       // Also save to the existing mental_health_checkins table for backward compatibility
       const { error: checkinsError } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsData.EPDS_Score,
-          risk_level: epdsData.Assessment,
+          epds_score: normalizedData.EPDS_Score,
+          risk_level: normalizedData.Assessment,
           user_id: user.id
         });
 
@@ -146,13 +157,13 @@ const MentalCheckIn = () => {
         // Don't throw here as the main data is already saved
       }
 
-      setEpdsResult(epdsData);
+      setEpdsResult(normalizedData);
       console.log('Mental health assessment completed successfully');
       setShowConfirmation(true);
 
       toast({
         title: "✅ EPDS Assessment Complete",
-        description: `Your score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
+        description: `Your score: ${normalizedData.EPDS_Score} – ${normalizedData.Assessment}`,
       });
 
     } catch (error) {
@@ -160,7 +171,7 @@ const MentalCheckIn = () => {
       
       toast({
         title: "Assessment could not be processed",
-        description: "Please try again later or contact support if the issue persists.",
+        description: error instanceof Error ? error.message : "Please try again later or contact support if the issue persists.",
         variant: "destructive",
       });
     } finally {
