@@ -25,14 +25,26 @@ serve(async (req) => {
       hasOpenAIKey: !!openAIApiKey,
       hasSupabaseUrl: !!supabaseUrl,
       hasServiceKey: !!supabaseServiceKey,
-      openAIKeyLength: openAIApiKey?.length || 0
+      openAIKeyLength: openAIApiKey?.length || 0,
+      openAIKeyPrefix: openAIApiKey?.substring(0, 10) || 'none'
     });
 
     // Validate required environment variables
-    if (!openAIApiKey) {
-      console.error('OPENAI_API_KEY is not set');
+    if (!openAIApiKey || openAIApiKey.trim() === '') {
+      console.error('OPENAI_API_KEY is not set or empty');
       return new Response(JSON.stringify({ 
-        error: 'OpenAI API key is not configured. Please add your OpenAI API key to Supabase Edge Functions secrets.' 
+        error: 'I\'m having trouble with my AI configuration. Please ensure the OpenAI API key is properly set up.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate OpenAI API key format
+    if (!openAIApiKey.startsWith('sk-')) {
+      console.error('Invalid OpenAI API key format');
+      return new Response(JSON.stringify({ 
+        error: 'I\'m having trouble with my AI configuration. The API key format appears to be invalid.' 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -42,7 +54,7 @@ serve(async (req) => {
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Supabase configuration missing');
       return new Response(JSON.stringify({ 
-        error: 'Supabase configuration is missing.' 
+        error: 'I\'m having trouble accessing the database. Please check the configuration.' 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -54,7 +66,7 @@ serve(async (req) => {
     
     if (!message || !userId) {
       return new Response(JSON.stringify({ 
-        error: 'Message and userId are required.' 
+        error: 'Message and user authentication are required.' 
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -97,6 +109,17 @@ serve(async (req) => {
       remindersError: reminders.error?.message
     });
 
+    // Check for database errors
+    if (physicalData.error || mentalData.error || reminders.error) {
+      console.error('Database query errors:', { physicalData: physicalData.error, mentalData: mentalData.error, reminders: reminders.error });
+      return new Response(JSON.stringify({ 
+        error: 'I\'m having a bit of trouble connecting to your health data right now. Please check your dashboard or try again shortly.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Build context for Nestie
     let contextInfo = "User's Recent Health Data:\n";
     
@@ -134,7 +157,23 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are Nestie, a compassionate, intelligent virtual companion designed to support users through their full reproductive and wellness journey. You are gender-inclusive and use terms like "birthing parent," "individual," or "your journey" instead of gendered terms like "mom" or "mother."
+    const systemPrompt = `You are Nestie, a compassionate virtual wellness companion for the WellNest app. You support users through their wellness journey with emotional support, health insights, and encouragement based on their submitted health and mental assessments.
+
+🔍 You have access to the following data from Supabase or the app:
+- Latest EPDS score and depression risk level (e.g. 2 = Low risk, 17 = High risk)
+- Pregnancy risk score (e.g. "high risk", "low risk") from physical vitals
+- Previous reminders, emotional notes, or appointments (if available)
+
+✅ Your job is to:
+- Greet the user warmly
+- Check if you can access their latest data
+- If yes: Give personalized, human-sounding recommendations based on their score
+- If not: Say "I'm here to help, but I'm having trouble accessing your latest data. Please check your dashboard or try again in a moment."
+
+💬 If user says "Hi" or sends a casual message, respond with empathy and offer help.
+
+❗ If connection to health data fails or any required variable is undefined, gracefully fall back with a soft message like:
+"I'm having a bit of trouble connecting right now. Please check your dashboard or try again shortly."
 
 Core Guidelines:
 - Be warm, empathetic, and supportive
@@ -180,7 +219,14 @@ If asked about data that isn't available, politely explain that you don't have t
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      
+      if (response.status === 401) {
+        throw new Error('The OpenAI API key appears to be invalid or expired. Please check your API key configuration.');
+      } else if (response.status === 429) {
+        throw new Error('OpenAI API rate limit exceeded. Please try again in a moment.');
+      } else {
+        throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      }
     }
 
     const data = await response.json();
@@ -194,13 +240,15 @@ If asked about data that isn't available, politely explain that you don't have t
   } catch (error) {
     console.error('Error in nestie-chat function:', error);
     
-    // Provide more specific error messages
-    let errorMessage = 'I apologize, but I encountered an issue processing your request. Please try again in a moment.';
+    // Provide more specific error messages based on the error type
+    let errorMessage = 'I\'m having a bit of trouble connecting right now. Please check your dashboard or try again shortly.';
     
-    if (error.message.includes('OpenAI API error')) {
-      errorMessage = 'I\'m having trouble connecting to my AI service. Please check that your OpenAI API key is valid and try again.';
+    if (error.message.includes('API key')) {
+      errorMessage = 'I\'m having trouble with my AI service configuration. Please ensure the OpenAI API key is properly set up.';
+    } else if (error.message.includes('rate limit')) {
+      errorMessage = 'I\'m getting a lot of requests right now. Please try again in a moment.';
     } else if (error.message.includes('fetch')) {
-      errorMessage = 'I\'m having trouble connecting to external services. Please check your internet connection and try again.';
+      errorMessage = 'I\'m having trouble connecting to external services. Please check your connection and try again.';
     }
     
     return new Response(JSON.stringify({ 

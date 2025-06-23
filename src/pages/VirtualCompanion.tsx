@@ -65,6 +65,11 @@ const VirtualCompanion = () => {
         throw new Error(response.error.message || 'Failed to connect to Nestie');
       }
 
+      if (response.data && response.data.error) {
+        console.error('Nestie function returned error:', response.data.error);
+        throw new Error(response.data.error);
+      }
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: response.data.response,
@@ -76,12 +81,16 @@ const VirtualCompanion = () => {
     } catch (error) {
       console.error('Error communicating with Nestie:', error);
       
-      let errorMessage = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+      let errorMessage = "I'm having a bit of trouble connecting right now. Please check your dashboard or try again shortly.";
       
       if (error.message.includes('log in')) {
         errorMessage = "Please log in to chat with Nestie.";
-      } else if (error.message.includes('OpenAI')) {
-        errorMessage = "I'm having trouble with my AI service. The OpenAI API may need to be configured properly.";
+      } else if (error.message.includes('API key')) {
+        errorMessage = "I'm having trouble with my AI service configuration. Please contact support if this continues.";
+      } else if (error.message.includes('rate limit')) {
+        errorMessage = "I'm getting a lot of requests right now. Please try again in a moment.";
+      } else if (error.message.includes('database') || error.message.includes('health data')) {
+        errorMessage = "I'm having trouble accessing your health data right now. Please check your dashboard or try again shortly.";
       }
       
       const errorBotMessage: Message = {
@@ -94,8 +103,8 @@ const VirtualCompanion = () => {
       
       toast({
         title: "Connection Issue",
-        description: error.message.includes('OpenAI') 
-          ? "OpenAI API configuration may be needed. Please check Edge Function settings."
+        description: error.message.includes('API key') 
+          ? "AI service configuration issue. Please contact support if this continues."
           : "Unable to connect to Nestie. Please try again.",
         variant: "destructive"
       });
