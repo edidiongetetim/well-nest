@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,9 @@ interface MentalHealthModalProps {
 interface EPDSResponse {
   EPDS_Score: number;
   Assessment: string;
+  Action: string;
+  Anxiety_Flag: boolean;
+  Additional_Action: string;
 }
 
 export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps) => {
@@ -189,7 +193,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
       console.log('Responses array for API:', responsesArray);
 
-      // Send data to EPDS API with correct endpoint
+      // Send data to EPDS API
       const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
         method: 'POST',
         headers: {
@@ -212,27 +216,44 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       const epdsData: EPDSResponse = await epdsResponse.json();
       console.log('EPDS response:', epdsData);
 
-      // Store in Supabase with corrected field mapping
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       console.log('Current user:', user?.id);
 
-      const { error } = await supabase
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      // Save to the new mental_epds_results table
+      const { error: epdsError } = await supabase
+        .from('mental_epds_results')
+        .insert({
+          user_id: user.id,
+          submitted_at: new Date().toISOString(),
+          epds_score: epdsData.EPDS_Score,
+          assessment: epdsData.Assessment,
+          anxiety_flag: epdsData.Anxiety_Flag,
+          actions: epdsData.Action,
+          extra_actions: epdsData.Additional_Action
+        });
+
+      if (epdsError) {
+        console.error('Error saving EPDS data:', epdsError);
+        throw new Error(`Database error: ${epdsError.message}`);
+      }
+
+      // Also save to existing table for backward compatibility
+      const { error: checkinsError } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsData.EPDS_Score, // Map EPDS_Score to epds_score
-          risk_level: epdsData.Assessment,  // Map Assessment to risk_level
-          user_id: user?.id
+          epds_score: epdsData.EPDS_Score,
+          risk_level: epdsData.Assessment,
+          user_id: user.id
         });
 
-      if (error) {
-        console.error('Error saving mental health data:', error);
-        toast({
-          title: "Error saving your check-in",
-          description: "Please try again later.",
-          variant: "destructive",
-        });
-        return;
+      if (checkinsError) {
+        console.error('Error saving mental health checkins data:', checkinsError);
       }
 
       console.log('Mental health data saved successfully');
@@ -240,7 +261,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       setShowConfirmation(true);
 
       toast({
-        title: "✅ Assessment Complete!",
+        title: "✅ EPDS Assessment saved and health snapshot updated",
         description: `Your EPDS Score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
       });
 
@@ -294,6 +315,20 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
                     {epdsResult?.Assessment}
                   </div>
                 </div>
+                
+                {epdsResult?.Action && (
+                  <div className="bg-blue-50 p-4 rounded-lg mt-4">
+                    <h4 className="font-poppins font-semibold text-blue-800 mb-2">Recommended Actions:</h4>
+                    <p className="font-poppins text-blue-700">{epdsResult.Action}</p>
+                  </div>
+                )}
+
+                {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && (
+                  <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
+                    <h4 className="font-poppins font-semibold text-amber-800 mb-2">⚠️ Additional Support Needed:</h4>
+                    <p className="font-poppins text-amber-700">{epdsResult.Additional_Action}</p>
+                  </div>
+                )}
               </div>
             </div>
 

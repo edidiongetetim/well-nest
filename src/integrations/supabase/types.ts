@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      mental_epds_results: {
+        Row: {
+          actions: string | null
+          anxiety_flag: boolean | null
+          assessment: string | null
+          created_at: string
+          epds_score: number | null
+          extra_actions: string | null
+          id: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actions?: string | null
+          anxiety_flag?: boolean | null
+          assessment?: string | null
+          created_at?: string
+          epds_score?: number | null
+          extra_actions?: string | null
+          id?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actions?: string | null
+          anxiety_flag?: boolean | null
+          assessment?: string | null
+          created_at?: string
+          epds_score?: number | null
+          extra_actions?: string | null
+          id?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mental_health_checkins: {
         Row: {
           created_at: string

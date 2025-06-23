@@ -33,8 +33,11 @@ interface PhysicalHealthRecord {
 interface MentalHealthRecord {
   id: string;
   epds_score: number | null;
-  risk_level: string | null;
-  created_at: string;
+  assessment: string | null;
+  anxiety_flag: boolean | null;
+  actions: string | null;
+  extra_actions: string | null;
+  submitted_at: string;
 }
 
 export const HealthSnapshotSection = ({
@@ -69,12 +72,12 @@ export const HealthSnapshotSection = ({
         .limit(1)
         .single();
 
-      // Fetch most recent mental health record
+      // Fetch most recent mental health record from the new table
       const { data: mentalData } = await supabase
-        .from('mental_health_checkins')
+        .from('mental_epds_results')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .order('submitted_at', { ascending: false })
         .limit(1)
         .single();
 
@@ -192,24 +195,41 @@ export const HealthSnapshotSection = ({
             {mentalRecord && mentalRecord.epds_score !== null ? (
               <div className="space-y-4">
                 <div className="bg-lavender-50 p-6 rounded-lg text-center">
-                  <Label className="font-poppins font-semibold text-gray-700">EPDS Score & Risk Level</Label>
+                  <Label className="font-poppins font-semibold text-gray-700">EPDS Score & Assessment</Label>
                   <div className="mt-2">
                     <span className="font-poppins text-2xl font-bold text-gray-900">
                       Score: {mentalRecord.epds_score}
                     </span>
-                    {mentalRecord.risk_level && (
+                    {mentalRecord.assessment && (
                       <>
                         <span className="mx-2">–</span>
-                        <span className={`font-poppins text-lg font-semibold ${getRiskLevelColor(mentalRecord.risk_level)}`}>
-                          {mentalRecord.risk_level}
+                        <span className={`font-poppins text-lg font-semibold ${getRiskLevelColor(mentalRecord.assessment)}`}>
+                          {mentalRecord.assessment}
                         </span>
                       </>
                     )}
                   </div>
                 </div>
+
+                {/* Actions */}
+                {mentalRecord.actions && (
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <Label className="font-poppins font-semibold text-blue-800">Recommended Actions:</Label>
+                    <p className="font-poppins text-blue-700 mt-2">{mentalRecord.actions}</p>
+                  </div>
+                )}
+
+                {/* Anxiety Flag & Additional Actions */}
+                {mentalRecord.anxiety_flag && mentalRecord.extra_actions && (
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                    <Label className="font-poppins font-semibold text-amber-800">⚠️ Additional Support Needed:</Label>
+                    <p className="font-poppins text-amber-700 mt-2">{mentalRecord.extra_actions}</p>
+                  </div>
+                )}
+
                 <div className="text-center">
                   <p className="font-poppins text-sm text-gray-500 mb-3">
-                    Last taken: {format(new Date(mentalRecord.created_at), 'MMMM d, yyyy')}
+                    Last taken: {format(new Date(mentalRecord.submitted_at), 'MMMM d, yyyy')}
                   </p>
                   <Button 
                     variant="outline" 
@@ -223,7 +243,7 @@ export const HealthSnapshotSection = ({
             ) : (
               <div className="text-center py-8">
                 <p className="font-poppins text-gray-600 mb-4">
-                  You haven't taken the mental health survey yet.
+                  No mental health data yet. Take your first assessment to get started.
                 </p>
                 <Button 
                   onClick={() => navigate('/mental-check-in')}

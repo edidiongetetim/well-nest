@@ -1,80 +1,45 @@
 
-import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
 interface ConfirmationScreenProps {
   title: string;
   summary: Record<string, string>;
   onTakeAgain: () => void;
+  hideTitle?: boolean;
 }
 
-export const ConfirmationScreen = ({ title, summary, onTakeAgain }: ConfirmationScreenProps) => {
-  const navigate = useNavigate();
-
+export const ConfirmationScreen = ({ title, summary, onTakeAgain, hideTitle = false }: ConfirmationScreenProps) => {
   return (
-    <div className="max-w-2xl mx-auto text-center">
-      {/* Success Icon */}
-      <div className="mb-8">
-        <div className="w-20 h-20 mx-auto bg-gradient-to-r from-teal-100 to-green-100 rounded-full flex items-center justify-center mb-4">
-          <Check className="w-10 h-10 text-teal-600" />
+    <div className="space-y-6">
+      {!hideTitle && (
+        <div className="text-center">
+          <h2 className="font-poppins font-bold text-2xl text-primary mb-4">
+            {title}
+          </h2>
         </div>
-        <h1 className="font-poppins font-bold text-2xl text-primary mb-2">
-          {title}
-        </h1>
-        <p className="font-poppins text-lg text-gray-600">
-          Your health check-in has been saved.
-        </p>
-      </div>
+      )}
 
-      {/* Summary */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+      {/* Summary Section */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border">
         <h3 className="font-poppins font-semibold text-lg mb-4" style={{ color: '#5B3673' }}>
-          Summary of Your Submission
+          Assessment Summary
         </h3>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.entries(summary).map(([key, value]) => (
             <div key={key} className="flex justify-between items-center">
-              <span className="font-poppins text-gray-700 capitalize">
-                {key.replace(/([A-Z])/g, ' $1').trim()}:
-              </span>
-              <span className="font-poppins font-medium text-gray-900">
-                {value || 'Not provided'}
-              </span>
+              <span className="font-poppins text-gray-600">{key}:</span>
+              <span className="font-poppins font-medium text-gray-900">{value}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button
-          onClick={() => navigate('/dashboard')}
-          className="px-8 py-3 text-lg font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-          style={{
-            background: 'linear-gradient(135deg, #E6D9F0 0%, #C8E6D9 100%)',
-            border: 'none',
-            color: '#5B3673'
-          }}
-        >
-          Go to Dashboard
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={() => navigate('/health')}
-          className="px-8 py-3 text-lg font-poppins font-medium rounded-full border-2 border-teal-400 text-teal-600 hover:bg-teal-50"
-        >
-          View History
-        </Button>
-        
-        <Button
-          variant="outline"
+      {/* Action Button */}
+      <div className="text-center">
+        <button
           onClick={onTakeAgain}
-          className="px-8 py-3 text-lg font-poppins font-medium rounded-full border-2 border-gray-300 text-gray-600 hover:bg-gray-50"
+          className="px-8 py-3 font-poppins font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-purple-400 text-purple-600 hover:bg-purple-50"
         >
           Take Again
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -10,10 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Updated interface to match actual API response
+// Updated interface to match the actual API response structure
 interface EPDSResponse {
   EPDS_Score: number;
   Assessment: string;
+  Action: string;
+  Anxiety_Flag: boolean;
+  Additional_Action: string;
 }
 
 const MentalCheckIn = () => {
@@ -24,6 +26,7 @@ const MentalCheckIn = () => {
   const [loading, setLoading] = useState(false);
   const [epdsResult, setEpdsResult] = useState<EPDSResponse | null>(null);
 
+  // Updated questions array to match the actual API response structure
   const questions = [
     {
       id: 'laughing',
@@ -180,7 +183,7 @@ const MentalCheckIn = () => {
       
       console.log('Responses array for API:', responsesArray);
 
-      // Send data to EPDS API with correct endpoint
+      // Send data to EPDS API
       console.log('Making request to EPDS API...');
       const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
         method: 'POST',
@@ -194,7 +197,6 @@ const MentalCheckIn = () => {
       });
 
       console.log('EPDS API response status:', epdsResponse.status);
-      console.log('EPDS API response headers:', Object.fromEntries(epdsResponse.headers.entries()));
 
       if (!epdsResponse.ok) {
         const errorText = await epdsResponse.text();
@@ -211,15 +213,34 @@ const MentalCheckIn = () => {
         throw new Error('Invalid response structure from EPDS API');
       }
 
-      // Store in Supabase
-      console.log('Saving to Supabase...');
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user?.id) {
         throw new Error('User not authenticated');
       }
 
-      const { error } = await supabase
+      // Save to the new mental_epds_results table
+      console.log('Saving EPDS results to Supabase...');
+      const { error: epdsError } = await supabase
+        .from('mental_epds_results')
+        .insert({
+          user_id: user.id,
+          submitted_at: new Date().toISOString(),
+          epds_score: epdsData.EPDS_Score,
+          assessment: epdsData.Assessment,
+          anxiety_flag: epdsData.Anxiety_Flag,
+          actions: epdsData.Action,
+          extra_actions: epdsData.Additional_Action
+        });
+
+      if (epdsError) {
+        console.error('Supabase EPDS error:', epdsError);
+        throw new Error(`Database error: ${epdsError.message}`);
+      }
+
+      // Also save to the existing mental_health_checkins table for backward compatibility
+      const { error: checkinsError } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
@@ -228,9 +249,9 @@ const MentalCheckIn = () => {
           user_id: user.id
         });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(`Database error: ${error.message}`);
+      if (checkinsError) {
+        console.error('Supabase checkins error:', checkinsError);
+        throw new Error(`Database error: ${checkinsError.message}`);
       }
 
       setEpdsResult(epdsData);
@@ -238,7 +259,7 @@ const MentalCheckIn = () => {
       setShowConfirmation(true);
 
       toast({
-        title: "✅ Assessment Complete!",
+        title: "✅ EPDS Assessment saved and health snapshot updated",
         description: `Your EPDS Score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
       });
 
@@ -306,11 +327,56 @@ const MentalCheckIn = () => {
           
           <main className="flex-1 p-6">
             {showConfirmation ? (
-              <ConfirmationScreen
-                title="✅ Assessment Complete!"
-                summary={getSummaryData()}
-                onTakeAgain={handleTakeAgain}
-              />
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                  <div className="text-center mb-8">
+                    <h1 className="font-poppins font-bold text-3xl text-primary mb-4">
+                      ✅ Assessment Complete!
+                    </h1>
+                  </div>
+
+                  {/* EPDS Results Display */}
+                  <div className="space-y-6">
+                    <div className="bg-gradient-to-r from-purple-50 to-lavender-50 p-6 rounded-lg border">
+                      <h3 className="font-poppins font-semibold text-xl text-primary mb-4 text-center">
+                        Your EPDS Results
+                      </h3>
+                      <div className="text-center space-y-4">
+                        <div>
+                          <div className="text-4xl font-bold text-purple-600 mb-2">
+                            Score: {epdsResult?.EPDS_Score}
+                          </div>
+                          <div className="text-xl font-semibold text-gray-700">
+                            Assessment: {epdsResult?.Assessment}
+                          </div>
+                        </div>
+                        
+                        {epdsResult?.Action && (
+                          <div className="bg-blue-50 p-4 rounded-lg mt-4">
+                            <h4 className="font-poppins font-semibold text-blue-800 mb-2">Recommended Actions:</h4>
+                            <p className="font-poppins text-blue-700">{epdsResult.Action}</p>
+                          </div>
+                        )}
+
+                        {epdsResult?.Anxiety_Flag && epdsResult?.Additional_Action && (
+                          <div className="bg-amber-50 p-4 rounded-lg mt-4 border border-amber-200">
+                            <h4 className="font-poppins font-semibold text-amber-800 mb-2">⚠️ Additional Support Needed:</h4>
+                            <p className="font-poppins text-amber-700">{epdsResult.Additional_Action}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <ConfirmationScreen
+                      title=""
+                      summary={getSummaryData()}
+                      onTakeAgain={handleTakeAgain}
+                      hideTitle={true}
+                    />
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="max-w-4xl mx-auto">
                 {/* Page Title */}
