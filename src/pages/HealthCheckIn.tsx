@@ -175,7 +175,7 @@ const HealthCheckIn = () => {
       }
 
       // Updated API endpoint to match documentation
-      const apiUrl = 'https://wellnest-51u4.onrender.com/docs#/default/predict_predict_post';
+      const apiUrl = 'https://wellnest-51u4.onrender.com/predict';
       console.log('Making request to:', apiUrl);
 
       // Send data to external prediction API with better error handling
