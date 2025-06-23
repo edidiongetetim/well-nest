@@ -9,13 +9,19 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
+// Updated interface to match actual API response
+interface EPDSResponse {
+  EPDS_Score: number;
+  Assessment: string;
+}
+
 const MentalCheckIn = () => {
   const { toast } = useToast();
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [epdsResult, setEpdsResult] = useState<{epds_score: number; risk_level: string} | null>(null);
+  const [epdsResult, setEpdsResult] = useState<EPDSResponse | null>(null);
 
   const questions = [
     {
@@ -168,8 +174,8 @@ const MentalCheckIn = () => {
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
       console.log('Responses array for API:', responsesArray);
 
-      // Send data to EPDS API with correct headers and payload
-      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
+      // Send data to EPDS API with correct endpoint
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,16 +194,16 @@ const MentalCheckIn = () => {
         throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
       }
 
-      const epdsData = await epdsResponse.json();
+      const epdsData: EPDSResponse = await epdsResponse.json();
       console.log('EPDS response:', epdsData);
 
-      // Store in Supabase with EPDS result
+      // Store in Supabase with corrected field mapping
       const { error } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsData.epds_score,
-          risk_level: epdsData.risk_level,
+          epds_score: epdsData.EPDS_Score, // Map EPDS_Score to epds_score
+          risk_level: epdsData.Assessment,  // Map Assessment to risk_level
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
@@ -217,7 +223,7 @@ const MentalCheckIn = () => {
 
       toast({
         title: "✅ Assessment Complete!",
-        description: `Your EPDS Score: ${epdsData.epds_score} – ${epdsData.risk_level}`,
+        description: `Your EPDS Score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
       });
 
     } catch (error) {
@@ -247,8 +253,8 @@ const MentalCheckIn = () => {
       'Total Questions': totalQuestions.toString(),
       'Questions Answered': answeredQuestions.toString(),
       'Completion Rate': `${completionRate}%`,
-      'EPDS Score': epdsResult?.epds_score?.toString() || 'Processing...',
-      'Risk Level': epdsResult?.risk_level || 'Processing...',
+      'EPDS Score': epdsResult?.EPDS_Score?.toString() || 'Processing...',
+      'Risk Level': epdsResult?.Assessment || 'Processing...',
       'Survey Type': 'EPDS Mental Health Check-in'
     };
   };

@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -17,9 +16,10 @@ interface MentalHealthModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Updated interface to match actual API response
 interface EPDSResponse {
-  epds_score: number;
-  risk_level: string;
+  EPDS_Score: number;
+  Assessment: string;
 }
 
 export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps) => {
@@ -30,6 +30,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [epdsResult, setEpdsResult] = useState<EPDSResponse | null>(null);
 
+  // ... keep existing code (questions array)
   const questions = [
     {
       id: 'laughing',
@@ -133,6 +134,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     }
   ];
 
+  // ... keep existing code (helper functions)
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({
       ...prev,
@@ -156,8 +158,8 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
     setEpdsResult(null);
   };
 
-  const getRiskLevelColor = (riskLevel: string) => {
-    const level = riskLevel.toLowerCase();
+  const getRiskLevelColor = (assessment: string) => {
+    const level = assessment.toLowerCase();
     if (level.includes('low')) return 'text-green-600';
     if (level.includes('moderate')) return 'text-yellow-600';
     if (level.includes('high')) return 'text-red-500';
@@ -187,8 +189,8 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
       console.log('Responses array for API:', responsesArray);
 
-      // Send data to EPDS API with correct headers and payload
-      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
+      // Send data to EPDS API with correct endpoint
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -210,7 +212,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
       const epdsData: EPDSResponse = await epdsResponse.json();
       console.log('EPDS response:', epdsData);
 
-      // Store in Supabase with EPDS result
+      // Store in Supabase with corrected field mapping
       const { data: { user } } = await supabase.auth.getUser();
       console.log('Current user:', user?.id);
 
@@ -218,8 +220,8 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsData.epds_score,
-          risk_level: epdsData.risk_level,
+          epds_score: epdsData.EPDS_Score, // Map EPDS_Score to epds_score
+          risk_level: epdsData.Assessment,  // Map Assessment to risk_level
           user_id: user?.id
         });
 
@@ -239,7 +241,7 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
 
       toast({
         title: "✅ Assessment Complete!",
-        description: `Your EPDS Score: ${epdsData.epds_score} – ${epdsData.risk_level}`,
+        description: `Your EPDS Score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
       });
 
     } catch (error) {
@@ -286,10 +288,10 @@ export const MentalHealthModal = ({ open, onOpenChange }: MentalHealthModalProps
               <div className="space-y-3">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-purple-600 mb-2">
-                    Score: {epdsResult?.epds_score}
+                    Score: {epdsResult?.EPDS_Score}
                   </div>
-                  <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.risk_level || '')}`}>
-                    {epdsResult?.risk_level}
+                  <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.Assessment || '')}`}>
+                    {epdsResult?.Assessment}
                   </div>
                 </div>
               </div>
