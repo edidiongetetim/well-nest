@@ -1,3 +1,4 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -168,13 +169,19 @@ const MentalCheckIn = () => {
     setLoading(true);
 
     try {
-      console.log('Sending EPDS assessment to API...');
+      console.log('Starting EPDS assessment...');
       
       // Convert responses to array of integers in question order
-      const responsesArray = questions.map(q => parseInt(responses[q.id]) || 0);
+      const responsesArray = questions.map(q => {
+        const responseValue = responses[q.id];
+        console.log(`Question ${q.id}: ${responseValue}`);
+        return parseInt(responseValue) || 0;
+      });
+      
       console.log('Responses array for API:', responsesArray);
 
       // Send data to EPDS API with correct endpoint
+      console.log('Making request to EPDS API...');
       const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
         method: 'POST',
         headers: {
@@ -187,38 +194,47 @@ const MentalCheckIn = () => {
       });
 
       console.log('EPDS API response status:', epdsResponse.status);
+      console.log('EPDS API response headers:', Object.fromEntries(epdsResponse.headers.entries()));
 
       if (!epdsResponse.ok) {
         const errorText = await epdsResponse.text();
-        console.error('EPDS API error:', errorText);
-        throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
+        console.error('EPDS API error response:', errorText);
+        throw new Error(`EPDS API request failed with status: ${epdsResponse.status} - ${errorText}`);
       }
 
       const epdsData: EPDSResponse = await epdsResponse.json();
-      console.log('EPDS response:', epdsData);
+      console.log('EPDS API response data:', epdsData);
 
-      // Store in Supabase with corrected field mapping
+      // Validate response structure
+      if (typeof epdsData.EPDS_Score === 'undefined' || typeof epdsData.Assessment === 'undefined') {
+        console.error('Invalid EPDS response structure:', epdsData);
+        throw new Error('Invalid response structure from EPDS API');
+      }
+
+      // Store in Supabase
+      console.log('Saving to Supabase...');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsData.EPDS_Score, // Map EPDS_Score to epds_score
-          risk_level: epdsData.Assessment,  // Map Assessment to risk_level
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          epds_score: epdsData.EPDS_Score,
+          risk_level: epdsData.Assessment,
+          user_id: user.id
         });
 
       if (error) {
-        console.error('Error saving mental health data:', error);
-        toast({
-          title: "Error saving your check-in",
-          description: "Please try again later.",
-          variant: "destructive",
-        });
-        return;
+        console.error('Supabase error:', error);
+        throw new Error(`Database error: ${error.message}`);
       }
 
       setEpdsResult(epdsData);
-      console.log('Mental health responses submitted successfully');
+      console.log('Mental health assessment completed successfully');
       setShowConfirmation(true);
 
       toast({
@@ -227,9 +243,30 @@ const MentalCheckIn = () => {
       });
 
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Complete error details:', error);
+      
+      let errorMessage = "There was an issue processing your mental health check-in.";
+      let errorDescription = "";
+      
+      if (error instanceof Error) {
+        errorDescription = error.message;
+        
+        if (error.message.includes('fetch')) {
+          errorMessage = "Network connection issue. Please check your internet connection.";
+        } else if (error.message.includes('API request failed')) {
+          errorMessage = "The assessment service is currently unavailable.";
+        } else if (error.message.includes('Invalid response')) {
+          errorMessage = "Received invalid data from the assessment service.";
+        } else if (error.message.includes('User not authenticated')) {
+          errorMessage = "Please log in to save your assessment.";
+        } else if (error.message.includes('Database error')) {
+          errorMessage = "Failed to save your assessment. Please try again.";
+        }
+      }
+      
       toast({
-        title: "There was an issue processing the mental health check-in. Please try again.",
+        title: errorMessage,
+        description: errorDescription,
         variant: "destructive",
       });
     } finally {
