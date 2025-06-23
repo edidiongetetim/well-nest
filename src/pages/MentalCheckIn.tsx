@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -182,18 +181,24 @@ const MentalCheckIn = () => {
     try {
       console.log('Starting EPDS assessment...');
       
-      // Convert responses to array of integers in question order
+      // Convert responses to array of integers in the correct question order
       const responsesArray = questions.map(q => {
         const responseValue = responses[q.id];
-        console.log(`Question ${q.id}: ${responseValue}`);
-        return parseInt(responseValue) || 0;
+        const intValue = parseInt(responseValue);
+        console.log(`Question ${q.id}: response "${responseValue}" -> ${intValue}`);
+        return isNaN(intValue) ? 0 : intValue;
       });
       
-      console.log('Responses array for API:', responsesArray);
+      console.log('Final responses array for API:', responsesArray);
 
-      // Send data to EPDS API
-      console.log('Making request to EPDS API...');
-      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds_score', {
+      // Validate we have 10 responses
+      if (responsesArray.length !== 10) {
+        throw new Error(`Invalid responses array length: ${responsesArray.length}, expected 10`);
+      }
+
+      // Send data to EPDS API with corrected endpoint
+      console.log('Making request to EPDS API endpoint: /epds');
+      const epdsResponse = await fetch('https://wellnest-51u4.onrender.com/epds', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -205,21 +210,37 @@ const MentalCheckIn = () => {
       });
 
       console.log('EPDS API response status:', epdsResponse.status);
+      console.log('EPDS API response headers:', Object.fromEntries(epdsResponse.headers.entries()));
 
       if (!epdsResponse.ok) {
         const errorText = await epdsResponse.text();
         console.error('EPDS API error response:', errorText);
-        throw new Error(`EPDS API request failed with status: ${epdsResponse.status}`);
+        throw new Error(`API responded with ${epdsResponse.status}: ${errorText}`);
       }
 
-      const epdsData: EPDSResponse = await epdsResponse.json();
-      console.log('EPDS API response data:', epdsData);
+      const responseText = await epdsResponse.text();
+      console.log('Raw API response:', responseText);
 
-      // Validate response structure
-      if (typeof epdsData.EPDS_Score === 'undefined' || typeof epdsData.Assessment === 'undefined') {
-        console.error('Invalid EPDS response structure:', epdsData);
-        throw new Error('Invalid response structure from EPDS API');
+      let epdsData: EPDSResponse;
+      try {
+        epdsData = JSON.parse(responseText);
+        console.log('Parsed EPDS API response data:', epdsData);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error('Invalid JSON response from API');
       }
+
+      // Validate response has required fields with graceful fallbacks
+      const validatedData: EPDSResponse = {
+        EPDS_Score: typeof epdsData.EPDS_Score === 'number' ? epdsData.EPDS_Score : 0,
+        Questions: epdsData.Questions || {},
+        Assessment: epdsData.Assessment || 'Assessment unavailable',
+        Action: Array.isArray(epdsData.Action) ? epdsData.Action : [],
+        Anxiety_Flag: Boolean(epdsData.Anxiety_Flag),
+        Additional_Action: Array.isArray(epdsData.Additional_Action) ? epdsData.Additional_Action : []
+      };
+
+      console.log('Validated EPDS data:', validatedData);
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -235,11 +256,11 @@ const MentalCheckIn = () => {
         .insert({
           user_id: user.id,
           submitted_at: new Date().toISOString(),
-          epds_score: epdsData.EPDS_Score,
-          assessment: epdsData.Assessment,
-          anxiety_flag: epdsData.Anxiety_Flag,
-          actions: Array.isArray(epdsData.Action) ? epdsData.Action.join('; ') : epdsData.Action,
-          extra_actions: Array.isArray(epdsData.Additional_Action) ? epdsData.Additional_Action.join('; ') : epdsData.Additional_Action
+          epds_score: validatedData.EPDS_Score,
+          assessment: validatedData.Assessment,
+          anxiety_flag: validatedData.Anxiety_Flag,
+          actions: validatedData.Action.join('; '),
+          extra_actions: validatedData.Additional_Action.join('; ')
         });
 
       if (epdsError) {
@@ -252,8 +273,8 @@ const MentalCheckIn = () => {
         .from('mental_health_checkins')
         .insert({
           responses,
-          epds_score: epdsData.EPDS_Score,
-          risk_level: epdsData.Assessment,
+          epds_score: validatedData.EPDS_Score,
+          risk_level: validatedData.Assessment,
           user_id: user.id
         });
 
@@ -262,27 +283,27 @@ const MentalCheckIn = () => {
         // Don't throw here as the main data is already saved
       }
 
-      setEpdsResult(epdsData);
+      setEpdsResult(validatedData);
       console.log('Mental health assessment completed successfully');
       setShowConfirmation(true);
 
       toast({
-        title: "✅ EPDS Assessment saved and health snapshot updated",
-        description: `Your EPDS Score: ${epdsData.EPDS_Score} – ${epdsData.Assessment}`,
+        title: "✅ EPDS Assessment Complete",
+        description: `Your score: ${validatedData.EPDS_Score} – ${validatedData.Assessment}`,
       });
 
     } catch (error) {
       console.error('Complete error details:', error);
       
-      let errorMessage = "There was an issue processing your mental health assessment.";
+      let errorMessage = "Unable to complete your assessment right now.";
       
       if (error instanceof Error) {
         if (error.message.includes('fetch') || error.message.includes('network')) {
-          errorMessage = "Network connection issue. Please check your internet connection and try again.";
-        } else if (error.message.includes('API request failed')) {
-          errorMessage = "The assessment service is temporarily unavailable. Please try again in a few moments.";
-        } else if (error.message.includes('Invalid response')) {
-          errorMessage = "Received invalid data from the assessment service. Please try again.";
+          errorMessage = "Network connection issue. Please check your internet and try again.";
+        } else if (error.message.includes('API responded with')) {
+          errorMessage = "Assessment service temporarily unavailable. Please try again in a moment.";
+        } else if (error.message.includes('Invalid JSON')) {
+          errorMessage = "Received invalid response from assessment service. Please try again.";
         } else if (error.message.includes('User not authenticated')) {
           errorMessage = "Please log in to save your assessment.";
         } else if (error.message.includes('Database error')) {
@@ -349,7 +370,7 @@ const MentalCheckIn = () => {
                       <AlertCircle className="w-10 h-10 text-red-500" />
                     </div>
                     <h1 className="font-poppins font-bold text-2xl text-red-600 mb-4">
-                      Assessment Error
+                      Assessment Temporarily Unavailable
                     </h1>
                     <p className="font-poppins text-gray-700 mb-6 text-lg">
                       {error}
@@ -398,10 +419,10 @@ const MentalCheckIn = () => {
                       <div className="text-center space-y-4">
                         <div>
                           <div className="text-4xl font-bold text-purple-600 mb-2">
-                            Score: {epdsResult?.EPDS_Score}
+                            Score: {epdsResult?.EPDS_Score ?? 'Unavailable'}
                           </div>
                           <div className={`text-xl font-semibold ${getRiskLevelColor(epdsResult?.Assessment || '')}`}>
-                            Assessment: {epdsResult?.Assessment}
+                            Assessment: {epdsResult?.Assessment || 'Assessment unavailable'}
                           </div>
                         </div>
                         

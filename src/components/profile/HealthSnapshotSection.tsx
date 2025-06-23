@@ -112,6 +112,12 @@ export const HealthSnapshotSection = ({
     return actions.split(';').map(action => action.trim()).filter(action => action.length > 0);
   };
 
+  // Safe display function that shows "undefined" for null/undefined values
+  const safeDisplay = (value: any, fallback: string = "undefined") => {
+    if (value === null || value === undefined) return fallback;
+    return value;
+  };
+
   if (loading) {
     return (
       <Card className="bg-white shadow-sm border border-gray-100">
@@ -198,19 +204,19 @@ export const HealthSnapshotSection = ({
           </TabsContent>
 
           <TabsContent value="mental" className="space-y-4">
-            {mentalRecord && mentalRecord.epds_score !== null ? (
+            {mentalRecord ? (
               <div className="space-y-4">
                 <div className="bg-lavender-50 p-6 rounded-lg text-center">
                   <Label className="font-poppins font-semibold text-gray-700">EPDS Score & Assessment</Label>
                   <div className="mt-2">
                     <span className="font-poppins text-2xl font-bold text-gray-900">
-                      Score: {mentalRecord.epds_score}
+                      Score: {safeDisplay(mentalRecord.epds_score)}
                     </span>
                     {mentalRecord.assessment && (
                       <>
                         <span className="mx-2">–</span>
                         <span className={`font-poppins text-lg font-semibold ${getRiskLevelColor(mentalRecord.assessment)}`}>
-                          {mentalRecord.assessment}
+                          {safeDisplay(mentalRecord.assessment)}
                         </span>
                       </>
                     )}
