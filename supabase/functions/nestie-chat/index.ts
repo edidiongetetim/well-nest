@@ -8,8 +8,70 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Enhanced fallback responses with specific quick prompt handling
+const getQuickPromptResponse = (message: string): string | null => {
+  const lowerMessage = message.toLowerCase().trim();
+  
+  // Quick prompt responses
+  if (lowerMessage.includes('how are you feeling today') || lowerMessage === 'how are you feeling today?') {
+    return "I'm here and ready to support you. Have you been feeling okay lately, physically or emotionally? 💜";
+  }
+  
+  if (lowerMessage.includes('what were my latest vitals') || lowerMessage.includes('latest vitals')) {
+    return "Here's what I found: Your latest vitals include [placeholder values]. Remember, staying consistent with check-ins helps track patterns over time. 💜";
+  }
+  
+  if (lowerMessage.includes('do i have any reminders today') || lowerMessage.includes('reminders today')) {
+    return "Yes! You have a doctor's appointment reminder today at 3:00 PM. Make sure to prepare any questions you have in advance. 💜";
+  }
+  
+  if (lowerMessage.includes("i'm feeling anxious today") || lowerMessage.includes('feeling anxious')) {
+    return "I'm so sorry you're feeling that way. Let's take a few slow breaths together. Would you like some calming affirmations or to review your latest check-ins? 💜";
+  }
+  
+  if (lowerMessage.includes('can you help me with my wellness journey') || lowerMessage.includes('wellness journey')) {
+    return "Absolutely. I can help you set goals, track your progress, and offer insights from your data. Let's take it step by step. 💜";
+  }
+  
+  return null;
+};
+
+// Follow-up conversation responses
+const getConversationResponse = (message: string): string | null => {
+  const lowerMessage = message.toLowerCase().trim();
+  
+  // Responses to physical/emotional well-being questions
+  if (lowerMessage === 'yes' || lowerMessage === 'yeah' || lowerMessage === 'good' || lowerMessage === 'fine' || lowerMessage === 'okay') {
+    return "That's wonderful to hear 💜 Let's keep tracking how you're feeling to stay on top of your wellness.";
+  }
+  
+  if (lowerMessage === 'no' || lowerMessage === 'not good' || lowerMessage === 'bad' || lowerMessage === 'not really' || lowerMessage === 'not okay') {
+    return "I'm really sorry to hear that. You're not alone — would you like me to guide you through a short check-in or suggest some calming support? 💜";
+  }
+  
+  // Responses to affirmations vs check-ins choice
+  if (lowerMessage.includes('affirmations') || lowerMessage === 'affirmations') {
+    return "Here's one for you: 'You are doing the best you can, and that is enough.' 💜\n\nWould you like another one?";
+  }
+  
+  if (lowerMessage.includes('check-ins') || lowerMessage.includes('check ins') || lowerMessage === 'check-ins' || lowerMessage.includes('summary') || lowerMessage.includes('show me')) {
+    return "Here's a quick summary of your latest check-ins: [placeholder summary – e.g. 'Vitals are stable, mental health score improved by 2 points.'] Would you like to explore trends or speak with someone? 💜";
+  }
+  
+  return null;
+};
+
 // Fallback responses for when AI is not available
 const getFallbackResponse = (message: string): string => {
+  // First check for quick prompts
+  const quickResponse = getQuickPromptResponse(message);
+  if (quickResponse) return quickResponse;
+  
+  // Then check for conversation responses
+  const conversationResponse = getConversationResponse(message);
+  if (conversationResponse) return conversationResponse;
+  
+  // General responses
   const lowerMessage = message.toLowerCase();
   
   if (lowerMessage.includes('hi') || lowerMessage.includes('hello') || lowerMessage.includes('hey')) {
@@ -17,7 +79,7 @@ const getFallbackResponse = (message: string): string => {
   }
   
   if (lowerMessage.includes('score') || lowerMessage.includes('assessment') || lowerMessage.includes('result')) {
-    return "I don't have your latest results right now, but you can view them in your health dashboard. I'm still learning how to help you better! Would you like me to guide you to your dashboard?";
+    return "I don't have your latest results right now, but you can view them in your health dashboard. I'm still learning how to help you better! Would you like me to guide you to your dashboard? 💜";
   }
   
   if (lowerMessage.includes('sad') || lowerMessage.includes('depressed') || lowerMessage.includes('anxious') || lowerMessage.includes('worried')) {
@@ -25,11 +87,11 @@ const getFallbackResponse = (message: string): string => {
   }
   
   if (lowerMessage.includes('health') || lowerMessage.includes('vitals') || lowerMessage.includes('blood pressure')) {
-    return "I'd love to help you with your health questions! Would you like to review your health dashboard together? You can find all your vitals and health check-ins there.";
+    return "I'd love to help you with your health questions! Would you like to review your health dashboard together? You can find all your vitals and health check-ins there. 💜";
   }
   
   if (lowerMessage.includes('reminder') || lowerMessage.includes('appointment')) {
-    return "Your reminders and appointments are important! You can check all your upcoming reminders in your dashboard. Is there something specific you'd like to be reminded about?";
+    return "Your reminders and appointments are important! You can check all your upcoming reminders in your dashboard. Is there something specific you'd like to be reminded about? 💜";
   }
   
   // Generic supportive response
@@ -170,7 +232,25 @@ serve(async (req) => {
       console.error('Database error, continuing with fallback:', dbError);
     }
 
-    // Prepare system prompt
+    // Check for quick prompt responses first (even with AI available)
+    const quickResponse = getQuickPromptResponse(message);
+    if (quickResponse) {
+      return new Response(JSON.stringify({ response: quickResponse }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check for conversation responses
+    const conversationResponse = getConversationResponse(message);
+    if (conversationResponse) {
+      return new Response(JSON.stringify({ response: conversationResponse }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Prepare system prompt for more complex queries
     const systemPrompt = `You are Nestie, a warm and caring virtual companion in the WellNest app. You support users on their wellness journey by answering their questions, offering emotional support, and gently suggesting next steps.
 
 Core Guidelines:
@@ -178,6 +258,7 @@ Core Guidelines:
 - Use gender-inclusive language consistently
 - Keep responses concise but compassionate
 - Always prioritize user safety and well-being
+- End responses with 💜 when appropriate
 
 Your responses should be:
 - Kind and understanding

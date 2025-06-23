@@ -71,8 +71,8 @@ const HealthCheckIn = () => {
         }
         break;
       case 'bloodSugar':
-        if (numValue < 3.0 || numValue > 10.0) {
-          return 'Please enter a valid blood sugar level (3.0-10.0 mmol/L)';
+        if (numValue < 6.0 || numValue > 20.0) {
+          return 'Please enter a valid blood sugar level (6.0-20.0 mmol/L)';
         }
         break;
       case 'bodyTemperature':
@@ -543,7 +543,7 @@ const HealthCheckIn = () => {
                       <Input
                         id="bloodSugar"
                         type="text"
-                        placeholder="e.g. 5.5"
+                        placeholder="e.g. 8.5"
                         value={formData.bloodSugar}
                         onChange={(e) => handleInputChange('bloodSugar', e.target.value)}
                         onBlur={(e) => handleBlur('bloodSugar', e.target.value)}
