@@ -59,14 +59,14 @@ const Dashboard = () => {
               {/* Health Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <HealthSummaryCard 
-                  title="Today's Health Summary"
+                  title="Today's Physical Health Summary"
                   riskLevel="Low Risk"
                   description="Your Physical Health Risk"
                   variant="success"
                 />
                 
                 <HealthSummaryCard 
-                  title="Today's Health Summary"
+                  title="Today's Mental Health Summary"
                   riskLevel="Medium Risk"
                   description="Your Mental Health Risk"
                   variant="warning"
