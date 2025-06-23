@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { AddReminderDialog } from "./AddReminderDialog";
+import { EnhancedAddReminderDialog } from "./EnhancedAddReminderDialog";
 
 interface Reminder {
   id: string;
@@ -60,16 +60,16 @@ export function EnhancedReminderCard() {
             <p className="font-poppins text-sm text-gray-600 mb-4">
               You don't have any reminders today
             </p>
-            <AddReminderDialog onReminderAdded={fetchReminders} />
+            <EnhancedAddReminderDialog onReminderAdded={fetchReminders} />
           </div>
         ) : (
           <div>
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center relative">
                 <Calendar className="w-8 h-8 text-primary" />
                 {nextReminder && (
-                  <div className="absolute mt-1 ml-1">
-                    <span className="text-xl font-bold text-primary font-poppins">
+                  <div className="absolute bottom-1 right-1 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
+                    <span className="text-xs font-bold font-poppins">
                       {format(new Date(nextReminder.reminder_date), 'd')}
                     </span>
                   </div>
@@ -92,6 +92,11 @@ export function EnhancedReminderCard() {
                         </>
                       )}
                     </p>
+                    {nextReminder.description && (
+                      <p className="font-poppins text-xs text-gray-500 mt-1">
+                        {nextReminder.description}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <>
@@ -108,7 +113,7 @@ export function EnhancedReminderCard() {
                 </button>
               </div>
             </div>
-            <AddReminderDialog onReminderAdded={fetchReminders} />
+            <EnhancedAddReminderDialog onReminderAdded={fetchReminders} />
           </div>
         )}
       </CardContent>
