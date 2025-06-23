@@ -3,27 +3,70 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
+  console.log('Nestie-chat function invoked');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Get environment variables
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    console.log('Environment check:', {
+      hasOpenAIKey: !!openAIApiKey,
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      openAIKeyLength: openAIApiKey?.length || 0
+    });
+
+    // Validate required environment variables
+    if (!openAIApiKey) {
+      console.error('OPENAI_API_KEY is not set');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key is not configured. Please add your OpenAI API key to Supabase Edge Functions secrets.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration missing');
+      return new Response(JSON.stringify({ 
+        error: 'Supabase configuration is missing.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { message, userId } = await req.json();
+    console.log('Request data:', { messageLength: message?.length, userId: !!userId });
     
+    if (!message || !userId) {
+      return new Response(JSON.stringify({ 
+        error: 'Message and userId are required.' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Initialize Supabase client
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log('Supabase client initialized');
     
     // Fetch user's health data for context
+    console.log('Fetching user health data...');
     const [physicalData, mentalData, reminders] = await Promise.all([
       supabase
         .from('physical_health_checkins')
@@ -44,6 +87,15 @@ serve(async (req) => {
         .order('reminder_date', { ascending: true })
         .limit(5)
     ]);
+
+    console.log('Database queries completed:', {
+      physicalDataCount: physicalData.data?.length || 0,
+      mentalDataCount: mentalData.data?.length || 0,
+      remindersCount: reminders.data?.length || 0,
+      physicalError: physicalData.error?.message,
+      mentalError: mentalData.error?.message,
+      remindersError: reminders.error?.message
+    });
 
     // Build context for Nestie
     let contextInfo = "User's Recent Health Data:\n";
@@ -105,6 +157,7 @@ Respond naturally to queries about:
 
 If asked about data that isn't available, politely explain that you don't have that information and suggest they check their health dashboard or add the information.`;
 
+    console.log('Making OpenAI API request...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -122,12 +175,17 @@ If asked about data that isn't available, politely explain that you don't have t
       }),
     });
 
-    const data = await response.json();
-    
+    console.log('OpenAI API response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${data.error?.message || 'Unknown error'}`);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
+    const data = await response.json();
+    console.log('OpenAI response received successfully');
+    
     const aiResponse = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ response: aiResponse }), {
@@ -135,8 +193,18 @@ If asked about data that isn't available, politely explain that you don't have t
     });
   } catch (error) {
     console.error('Error in nestie-chat function:', error);
+    
+    // Provide more specific error messages
+    let errorMessage = 'I apologize, but I encountered an issue processing your request. Please try again in a moment.';
+    
+    if (error.message.includes('OpenAI API error')) {
+      errorMessage = 'I\'m having trouble connecting to my AI service. Please check that your OpenAI API key is valid and try again.';
+    } else if (error.message.includes('fetch')) {
+      errorMessage = 'I\'m having trouble connecting to external services. Please check your internet connection and try again.';
+    }
+    
     return new Response(JSON.stringify({ 
-      error: 'I apologize, but I encountered an issue processing your request. Please try again in a moment.' 
+      error: errorMessage 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

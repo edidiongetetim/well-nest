@@ -50,6 +50,7 @@ const VirtualCompanion = () => {
         throw new Error('Please log in to use Nestie');
       }
 
+      console.log('Sending message to Nestie:', inputText);
       const response = await supabase.functions.invoke('nestie-chat', {
         body: {
           message: inputText,
@@ -57,8 +58,11 @@ const VirtualCompanion = () => {
         }
       });
 
+      console.log('Nestie response:', response);
+
       if (response.error) {
-        throw new Error(response.error.message);
+        console.error('Supabase function error:', response.error);
+        throw new Error(response.error.message || 'Failed to connect to Nestie');
       }
 
       const botMessage: Message = {
@@ -71,17 +75,28 @@ const VirtualCompanion = () => {
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error communicating with Nestie:', error);
-      const errorMessage: Message = {
+      
+      let errorMessage = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+      
+      if (error.message.includes('log in')) {
+        errorMessage = "Please log in to chat with Nestie.";
+      } else if (error.message.includes('OpenAI')) {
+        errorMessage = "I'm having trouble with my AI service. The OpenAI API may need to be configured properly.";
+      }
+      
+      const errorBotMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I apologize, but I'm having trouble connecting right now. Please try again in a moment, or check your health dashboard for your latest information.",
+        text: errorMessage,
         sender: 'bot',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorBotMessage]);
       
       toast({
         title: "Connection Issue",
-        description: "Unable to connect to Nestie. Please try again.",
+        description: error.message.includes('OpenAI') 
+          ? "OpenAI API configuration may be needed. Please check Edge Function settings."
+          : "Unable to connect to Nestie. Please try again.",
         variant: "destructive"
       });
     } finally {
