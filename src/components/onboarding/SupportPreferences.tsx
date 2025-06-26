@@ -40,7 +40,7 @@ export const SupportPreferences = ({ onNext, preferences, onUpdate }: SupportPre
     },
     {
       key: "nestieNotes",
-      label: "Encouraging notes from Nestie",
+      label: "Encouraging Support from Nestie, our AI Doula",
       description: "Daily motivation and support messages",
       icon: MessageCircle,
       color: "text-purple-600"

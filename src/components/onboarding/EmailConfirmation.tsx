@@ -2,6 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, CheckCircle } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmailConfirmationProps {
   onNext: () => void;
@@ -9,6 +12,45 @@ interface EmailConfirmationProps {
 }
 
 export const EmailConfirmation = ({ onNext, email }: EmailConfirmationProps) => {
+  const [isResending, setIsResending] = useState(false);
+  const { toast } = useToast();
+
+  const handleResendEmail = async () => {
+    if (!email) return;
+    
+    setIsResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth-callback`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Email sent!",
+          description: "Verification email sent successfully. Check your inbox.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to resend verification email. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="text-center space-y-6">
@@ -21,10 +63,10 @@ export const EmailConfirmation = ({ onNext, email }: EmailConfirmationProps) => 
         
         <div className="space-y-4">
           <h1 className="font-poppins text-4xl font-bold text-primary">
-            Check Your Email
+            Check Your Email 📬
           </h1>
           <p className="font-poppins text-xl text-gray-600 max-w-lg mx-auto leading-relaxed">
-            Please confirm your email and sign back in to begin onboarding.
+            We've sent a confirmation link to your inbox. Please verify your email to continue using WellNest.
           </p>
           {email && (
             <p className="font-poppins text-sm text-gray-500">
@@ -54,6 +96,25 @@ export const EmailConfirmation = ({ onNext, email }: EmailConfirmationProps) => 
             </ul>
           </CardContent>
         </Card>
+
+        <div className="space-y-4">
+          <p className="font-poppins text-sm text-gray-500">
+            Didn't receive the email? Check your spam folder or tap below to resend.
+          </p>
+          
+          <Button
+            onClick={handleResendEmail}
+            disabled={isResending || !email}
+            variant="outline"
+            className="font-poppins"
+          >
+            {isResending ? "Sending..." : "Resend Verification Email"}
+          </Button>
+        </div>
+
+        <p className="font-poppins text-sm text-gray-500">
+          Once verified, come back and log in again to complete setup.
+        </p>
       </div>
 
       <div className="text-center pt-8">

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WelcomeScreen } from "@/components/onboarding/WelcomeScreen";
 import { JourneyStageSelection } from "@/components/onboarding/JourneyStageSelection";
 import { PregnancyDetails } from "@/components/onboarding/PregnancyDetails";
@@ -7,6 +7,7 @@ import { PostpartumDetails } from "@/components/onboarding/PostpartumDetails";
 import { SupportPreferences } from "@/components/onboarding/SupportPreferences";
 import { HealthAssessmentsScreen } from "@/components/onboarding/HealthAssessmentsScreen";
 import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
+import { EmailConfirmation } from "@/components/onboarding/EmailConfirmation";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +32,8 @@ export interface OnboardingData {
 
 const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     journeyStage: "",
     supportPreferences: {
@@ -49,12 +52,35 @@ const Onboarding = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Check email verification status
+  useEffect(() => {
+    const checkEmailVerification = async () => {
+      if (user) {
+        setUserEmail(user.email || "");
+        
+        // If user is not email confirmed, show email confirmation
+        if (user.email && !user.email_confirmed_at) {
+          setShowEmailConfirmation(true);
+        } else {
+          setShowEmailConfirmation(false);
+        }
+      }
+    };
+
+    checkEmailVerification();
+  }, [user]);
+
   const updateOnboardingData = (data: Partial<OnboardingData>) => {
     setOnboardingData(prev => ({ ...prev, ...data }));
   };
 
   const nextStep = () => {
     setCurrentStep(prev => prev + 1);
+  };
+
+  const handleEmailConfirmationNext = () => {
+    setShowEmailConfirmation(false);
+    // Continue with normal onboarding flow
   };
 
   const completeOnboarding = async () => {
@@ -109,6 +135,17 @@ const Onboarding = () => {
     console.log('Navigating to dashboard...');
     navigate('/dashboard');
   };
+
+  // Show email confirmation if needed
+  if (showEmailConfirmation) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-green-50">
+        <div className="container mx-auto px-4 py-8">
+          <EmailConfirmation onNext={handleEmailConfirmationNext} email={userEmail} />
+        </div>
+      </div>
+    );
+  }
 
   const renderStep = () => {
     switch (currentStep) {

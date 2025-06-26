@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 import { LayoutDashboard, Heart, Brain, Users, Bot, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -36,6 +37,7 @@ const menuItems = [
     title: "AI Chatbot",
     url: "/ai-chatbot",
     icon: Bot,
+    badge: "In Beta"
   },
   {
     title: "Settings",
@@ -77,7 +79,15 @@ export function AppSidebar() {
                       >
                         <Link to={item.url} className="flex items-center gap-3">
                           <item.icon className="w-5 h-5" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {item.badge && (
+                            <Badge 
+                              variant="secondary" 
+                              className="bg-orange-100 text-orange-600 border-orange-200 font-poppins text-xs px-2 py-0.5 ml-2"
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
