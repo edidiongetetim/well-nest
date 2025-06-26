@@ -23,7 +23,7 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
     setLoading(true);
     
     try {
-      // Fetch real posts from Supabase with explicit join using user_id
+      // Fetch real posts from Supabase with correct foreign key join
       const { data: realPosts, error } = await supabase
         .from('posts')
         .select(`
@@ -46,14 +46,13 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
           saves_count,
           views_count,
           created_at,
-          profiles!inner(
+          profiles!posts_user_id_fkey(
             first_name,
             last_name,
             avatar_url,
             phone_number
           )
         `)
-        .eq('profiles.id', 'posts.user_id')
         .order('created_at', { ascending: false })
         .limit(20);
 
