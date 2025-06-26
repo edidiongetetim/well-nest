@@ -33,6 +33,13 @@ export function PostHashtagManager({
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddHashtag();
+    }
+  };
+
   const removeHashtag = (tagToRemove: string) => {
     setHashtags(hashtags.filter(tag => tag !== tagToRemove));
   };
@@ -40,16 +47,16 @@ export function PostHashtagManager({
   return (
     <div className="space-y-4">
       {hashtags.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="flex flex-wrap gap-2">
           {hashtags.map((tag, index) => (
             <Badge 
               key={tag} 
-              className={`${hashtagColors[index % hashtagColors.length]} border rounded-full px-3 py-2 text-sm font-medium flex items-center justify-between`}
+              className={`${hashtagColors[index % hashtagColors.length]} border rounded-full px-3 py-2 text-sm font-medium flex items-center gap-2`}
             >
               <span>#{tag}</span>
               <button 
                 onClick={() => removeHashtag(tag)} 
-                className="ml-2 hover:bg-black/10 rounded-full p-0.5 transition-colors"
+                className="hover:bg-black/10 rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -62,18 +69,13 @@ export function PostHashtagManager({
           placeholder="Add hashtag..."
           value={hashtagInput}
           onChange={(e) => setHashtagInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleAddHashtag()}
-          className="flex-1 h-9 text-sm border-purple-200 focus:border-purple-300 focus:ring-purple-200"
+          onKeyPress={handleKeyPress}
+          className="flex-1 text-base border-gray-200 focus:border-purple-300 focus:ring-purple-200 rounded-lg"
+          style={{ fontSize: '16px' }}
         />
         <Button 
-          size="sm" 
           onClick={handleAddHashtag}
-          className="text-white font-semibold hover:brightness-110 transition-all duration-200"
-          style={{
-            background: 'linear-gradient(to right, #B39DDB, #B2EBF2)',
-            borderRadius: '20px',
-            fontSize: '14px'
-          }}
+          className="bg-[#6A1B9A] text-white font-semibold hover:bg-[#5A137A] active:bg-[#4A0E5F] transition-all duration-200 px-4 py-2 rounded-3xl text-sm"
         >
           Add
         </Button>

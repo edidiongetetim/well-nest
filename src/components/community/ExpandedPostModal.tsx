@@ -101,17 +101,14 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="p-0 border-0 shadow-xl"
+        className="p-0 border-0 max-w-[560px] w-[90%] sm:w-full"
         style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.6)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: '24px',
-          boxShadow: '0 4px 20px rgba(179, 157, 219, 0.2)',
-          width: 'min(90%, 420px)',
-          maxWidth: '420px'
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.12)',
         }}
       >
-        <div className="relative p-6 space-y-6">
+        <div className="relative p-6 sm:p-8 space-y-6">
           {/* Header with close button */}
           <div className="flex items-center justify-between">
             <h2 className="font-poppins font-semibold text-xl text-gray-900">
@@ -164,30 +161,20 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
             />
 
             {/* Media Buttons */}
-            <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-              <PostMediaButtons
-                onSubmit={() => {}}
-                isSubmitting={isSubmitting}
-                showLinkInput={showLinkInput}
-                setShowLinkInput={setShowLinkInput}
-              />
-            </div>
+            <PostMediaButtons
+              onSubmit={() => {}}
+              isSubmitting={isSubmitting}
+              showLinkInput={showLinkInput}
+              setShowLinkInput={setShowLinkInput}
+            />
           </div>
 
-          {/* Sticky Post Button */}
-          <div className="flex justify-end pt-8">
+          {/* Post Button - Centered */}
+          <div className="flex justify-center pt-4">
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="text-white font-bold hover:brightness-110 hover:scale-105 transition-all duration-200"
-              style={{
-                background: 'linear-gradient(to right, #B39DDB, #B2EBF2)',
-                borderRadius: '32px',
-                fontSize: '16px',
-                fontWeight: '600',
-                padding: '14px 24px',
-                boxShadow: '0 4px 12px rgba(179, 157, 219, 0.3)'
-              }}
+              className="bg-[#6A1B9A] text-white font-semibold hover:bg-[#5A137A] active:bg-[#4A0E5F] transition-all duration-200 text-base px-8 py-3 rounded-3xl shadow-sm"
             >
               {isSubmitting ? "Posting..." : "Post"}
             </Button>

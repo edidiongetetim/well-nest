@@ -17,19 +17,19 @@ export function CreatePostForm({ title, setTitle, content, setContent }: CreateP
 
   return (
     <div className="flex items-start gap-4">
-      <Avatar className="w-12 h-12">
+      <Avatar className="w-12 h-12 flex-shrink-0">
         <AvatarImage src="/placeholder.svg" alt="Your avatar" />
         <AvatarFallback className="bg-purple-100 text-purple-600">
           {user?.email?.charAt(0).toUpperCase() || "U"}
         </AvatarFallback>
       </Avatar>
       
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-4">
         <Input
           placeholder="Add a title (optional)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="border border-gray-200 bg-white/80 font-poppins text-base placeholder:text-gray-400 rounded-lg focus:border-purple-300 focus:ring-purple-200"
+          className="w-full border border-gray-200 bg-white font-poppins text-base placeholder:text-gray-400 rounded-lg focus:border-purple-300 focus:ring-purple-200"
           style={{ fontSize: '16px' }}
         />
         
@@ -37,10 +37,10 @@ export function CreatePostForm({ title, setTitle, content, setContent }: CreateP
           placeholder="What's on your mind today? Share your thoughts, experiences, or ask for support..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="border border-gray-200 bg-white/80 resize-none font-poppins placeholder:text-gray-400 rounded-lg focus:border-purple-300 focus:ring-purple-200"
+          className="w-full border border-gray-200 bg-white resize-none font-poppins placeholder:text-gray-400 rounded-lg focus:border-purple-300 focus:ring-purple-200"
           style={{ 
             fontSize: '16px',
-            minHeight: '100px'
+            minHeight: '120px'
           }}
         />
       </div>
