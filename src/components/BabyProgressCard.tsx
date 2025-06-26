@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { calculatePregnancyWeek, calculatePregnancyFromWeek, calculateBabyAge } from "@/utils/pregnancyCalculations";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { format } from "date-fns";
 
 interface OnboardingData {
   journeyStage?: string;
@@ -114,7 +115,7 @@ export function BabyProgressCard() {
     );
   }
 
-  // Handle pregnancy scenario
+  // Handle pregnancy scenario with two-card layout
   if (journeyStage === "Pregnant") {
     const today = new Date();
     let pregnancyInfo;
@@ -131,32 +132,48 @@ export function BabyProgressCard() {
 
     return (
       <div className="space-y-4">
-        {/* Main pregnancy info card */}
-        <Card className="bg-gradient-to-br from-lavender-50 to-cream-50 rounded-xl shadow-lg border border-gray-100">
-          <CardContent className="p-6">
-            <div className="text-center mb-6">
-              <h3 className="font-poppins font-semibold text-lg text-gray-800 mb-2">
-                Your baby is the size of: {pregnancyInfo.babySize.name} {pregnancyInfo.babySize.emoji}
-              </h3>
-              <p className="font-poppins text-sm text-gray-600">
-                Week {pregnancyInfo.currentWeek} • {pregnancyInfo.babySize.size}
-              </p>
-            </div>
-            
-            <div className="relative mx-auto w-48 h-48 bg-gradient-to-br from-purple-100 to-lavender-100 rounded-full shadow-lg mb-4 overflow-hidden flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full shadow-inner bg-gradient-to-br from-white/20 to-transparent"></div>
-              <span className="text-8xl">{pregnancyInfo.babySize.emoji}</span>
-            </div>
-            
-            <div className="text-center">
-              <p className="font-poppins text-gray-600 text-sm">
-                {pregnancyInfo.currentWeek} weeks, {pregnancyInfo.currentDay} days • {pregnancyInfo.daysRemaining} days to go
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Two-card layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left card - Date and pregnancy info */}
+          <Card className="bg-gradient-to-br from-lavender-50 to-cream-50 rounded-xl shadow-lg border border-gray-100">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h2 className="font-poppins font-bold text-2xl text-primary mb-2">
+                    {format(new Date(), 'd MMMM')}
+                  </h2>
+                  <p className="font-poppins text-lg text-gray-700 mb-2">
+                    {pregnancyInfo.currentWeek} weeks, {pregnancyInfo.currentDay} days
+                  </p>
+                  <p className="font-poppins text-sm text-gray-600">
+                    {pregnancyInfo.daysRemaining} days left to childbirth
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Progress tracker card */}
+          {/* Right card - Baby size and visual */}
+          <Card className="bg-gradient-to-br from-purple-50 to-lavender-50 rounded-xl shadow-lg border border-gray-100">
+            <CardContent className="p-6">
+              <div className="text-center space-y-4">
+                <h3 className="font-poppins font-semibold text-lg text-gray-800">
+                  Your baby is the size of: {pregnancyInfo.babySize.name} {pregnancyInfo.babySize.emoji}
+                </h3>
+                
+                <div className="relative mx-auto w-24 h-24 bg-gradient-to-br from-purple-100 to-lavender-100 rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-5xl">{pregnancyInfo.babySize.emoji}</span>
+                </div>
+                
+                <p className="font-poppins text-sm text-gray-600">
+                  Week {pregnancyInfo.currentWeek} • {pregnancyInfo.babySize.size}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Progress tracker below both cards */}
         <Card className="bg-white rounded-xl shadow-sm border border-gray-100">
           <CardContent className="p-6">
             <div className="space-y-4">
