@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,16 +23,34 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
     setLoading(true);
     
     try {
-      // Fetch real posts from Supabase
+      // Fetch real posts from Supabase with proper join
       const { data: realPosts, error } = await supabase
         .from('posts')
         .select(`
-          *,
-          profiles:user_id (
+          id,
+          user_id,
+          title,
+          content,
+          mood,
+          image_url,
+          video_url,
+          audio_url,
+          link_url,
+          link_title,
+          hashtags,
+          visibility,
+          is_anonymous,
+          likes_count,
+          comments_count,
+          shares_count,
+          saves_count,
+          views_count,
+          created_at,
+          profiles!posts_user_id_fkey (
             first_name,
             last_name,
             avatar_url,
-            pronouns
+            phone_number
           )
         `)
         .order('created_at', { ascending: false })
@@ -43,20 +60,20 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
         console.error('Error fetching posts:', error);
         setPosts(placeholderPosts);
       } else {
+        // Transform the data to match our Post interface
+        const transformedPosts = (realPosts || []).map(post => ({
+          ...post,
+          profiles: post.profiles ? {
+            first_name: post.profiles.first_name,
+            last_name: post.profiles.last_name,
+            avatar_url: post.profiles.avatar_url,
+            pregnancy_weeks: null,
+            pronouns: null
+          } : null
+        }));
+
         // Combine real posts with placeholder posts
-        const combinedPosts = [
-          ...(realPosts || []).map(post => ({
-            ...post,
-            profiles: post.profiles ? {
-              first_name: post.profiles.first_name,
-              last_name: post.profiles.last_name,
-              avatar_url: post.profiles.avatar_url,
-              pregnancy_weeks: null,
-              pronouns: post.profiles.pronouns || null
-            } : null
-          })),
-          ...placeholderPosts
-        ];
+        const combinedPosts = [...transformedPosts, ...placeholderPosts];
 
         // Simple filtering based on feedType
         let filteredPosts = [...combinedPosts];
