@@ -54,37 +54,58 @@ const Onboarding = () => {
   };
 
   const completeOnboarding = async () => {
-    if (!user) return;
+    console.log('Starting onboarding completion...');
+    console.log('Current user:', user?.id);
+    console.log('Onboarding data:', onboardingData);
+
+    if (!user) {
+      console.error('No user found during onboarding completion');
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in again to complete setup.",
+      });
+      navigate('/login');
+      return;
+    }
 
     try {
-      // Save onboarding data to user profile
+      // Use UPSERT to handle cases where profile doesn't exist
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           app_preferences: {
             ...onboardingData,
             onboardingCompleted: true,
             completedAt: new Date().toISOString(),
           }
-        })
-        .eq('id', user.id);
+        }, {
+          onConflict: 'id'
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error during onboarding:', error);
+        throw error;
+      }
 
+      console.log('Onboarding data saved successfully');
+      
       toast({
         title: "Welcome to WellNest!",
         description: "Your profile has been set up successfully.",
       });
 
-      navigate('/dashboard');
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast({
         title: "Setup Complete",
         description: "Welcome to WellNest! You can always update your preferences later.",
       });
-      navigate('/dashboard');
     }
+
+    // Always navigate to dashboard, regardless of database operation success
+    console.log('Navigating to dashboard...');
+    navigate('/dashboard');
   };
 
   const renderStep = () => {
