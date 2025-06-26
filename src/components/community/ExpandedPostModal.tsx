@@ -100,9 +100,19 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl bg-white/95 backdrop-blur-lg border-0 shadow-2xl">
+      <DialogContent 
+        className="p-0 border-0 shadow-xl"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.6)',
+          backdropFilter: 'blur(12px)',
+          borderRadius: '24px',
+          boxShadow: '0 4px 20px rgba(179, 157, 219, 0.2)',
+          width: 'min(90%, 420px)',
+          maxWidth: '420px'
+        }}
+      >
         <div className="relative p-6 space-y-6">
-          {/* Header with single close button */}
+          {/* Header with close button */}
           <div className="flex items-center justify-between">
             <h2 className="font-poppins font-semibold text-xl text-gray-900">
               Create Post
@@ -111,7 +121,7 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="rounded-full h-8 w-8 p-0 hover:bg-gray-100 hover:opacity-80"
+              className="rounded-full h-8 w-8 p-0 hover:bg-gray-100 hover:scale-105 transition-all duration-200"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -119,7 +129,7 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
           </div>
 
           {/* Post Form */}
-          <div className="space-y-5">
+          <div className="space-y-6">
             <CreatePostForm
               title={title}
               setTitle={setTitle}
@@ -145,7 +155,7 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
               setHashtagInput={setHashtagInput}
             />
 
-            {/* Visibility and Mood (without duplicate display) */}
+            {/* Visibility and Mood */}
             <PostVisibilitySelector
               mood={mood}
               setMood={setMood}
@@ -153,10 +163,10 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
               setVisibility={setVisibility}
             />
 
-            {/* Media Buttons (without duplicate Post button) */}
+            {/* Media Buttons */}
             <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
               <PostMediaButtons
-                onSubmit={() => {}} // Empty function since we handle submit with sticky button
+                onSubmit={() => {}}
                 isSubmitting={isSubmitting}
                 showLinkInput={showLinkInput}
                 setShowLinkInput={setShowLinkInput}
@@ -165,13 +175,18 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
           </div>
 
           {/* Sticky Post Button */}
-          <div className="absolute bottom-6 right-6">
+          <div className="flex justify-end pt-8">
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="rounded-full px-6 py-3 font-poppins font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+              className="text-white font-bold hover:brightness-110 hover:scale-105 transition-all duration-200"
               style={{
-                background: 'linear-gradient(to right, #A68AE6, #C3E8DE)',
+                background: 'linear-gradient(to right, #B39DDB, #B2EBF2)',
+                borderRadius: '32px',
+                fontSize: '16px',
+                fontWeight: '600',
+                padding: '14px 24px',
+                boxShadow: '0 4px 12px rgba(179, 157, 219, 0.3)'
               }}
             >
               {isSubmitting ? "Posting..." : "Post"}

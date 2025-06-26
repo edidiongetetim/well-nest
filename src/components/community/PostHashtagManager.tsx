@@ -63,9 +63,18 @@ export function PostHashtagManager({
           value={hashtagInput}
           onChange={(e) => setHashtagInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleAddHashtag()}
-          className="flex-1 h-9 text-sm"
+          className="flex-1 h-9 text-sm border-purple-200 focus:border-purple-300 focus:ring-purple-200"
         />
-        <Button size="sm" onClick={handleAddHashtag}>
+        <Button 
+          size="sm" 
+          onClick={handleAddHashtag}
+          className="text-white font-semibold hover:brightness-110 transition-all duration-200"
+          style={{
+            background: 'linear-gradient(to right, #B39DDB, #B2EBF2)',
+            borderRadius: '20px',
+            fontSize: '14px'
+          }}
+        >
           Add
         </Button>
       </div>

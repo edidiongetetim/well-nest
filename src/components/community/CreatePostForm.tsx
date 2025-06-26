@@ -29,14 +29,19 @@ export function CreatePostForm({ title, setTitle, content, setContent }: CreateP
           placeholder="Add a title (optional)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="border-0 bg-gray-50 font-poppins text-lg placeholder:text-gray-400"
+          className="border border-gray-200 bg-white/80 font-poppins text-base placeholder:text-gray-400 rounded-lg focus:border-purple-300 focus:ring-purple-200"
+          style={{ fontSize: '16px' }}
         />
         
         <Textarea
           placeholder="What's on your mind today? Share your thoughts, experiences, or ask for support..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="border-0 bg-gray-50 resize-none font-poppins placeholder:text-gray-400 min-h-[100px]"
+          className="border border-gray-200 bg-white/80 resize-none font-poppins placeholder:text-gray-400 rounded-lg focus:border-purple-300 focus:ring-purple-200"
+          style={{ 
+            fontSize: '16px',
+            minHeight: '100px'
+          }}
         />
       </div>
     </div>

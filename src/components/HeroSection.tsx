@@ -22,13 +22,18 @@ const HeroSection = () => {
             </p>
           </div>
           
-          <div className="mt-8">
+          <div className="mt-6">
             <Link to="/signup">
               <button 
-                className="px-8 py-3.5 text-white text-base font-semibold rounded-3xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out transform h-12"
+                className="text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:brightness-110 hover:scale-105 transition-all duration-300 ease-in-out transform text-lg px-8 py-4 sm:text-base sm:px-6 sm:py-3"
                 style={{
-                  background: 'linear-gradient(to right, #A68AE6, #C3E8DE)',
-                  boxShadow: '0 4px 12px rgba(166, 138, 230, 0.25), 0 0 0 1px rgba(166, 138, 230, 0.1) inset',
+                  background: 'linear-gradient(to right, #B39DDB, #B2EBF2)',
+                  boxShadow: '0 4px 12px rgba(179, 157, 219, 0.3)',
+                  borderRadius: '32px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  padding: '16px 32px',
+                  marginTop: '24px'
                 }}
               >
                 Get Started
