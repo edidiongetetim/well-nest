@@ -38,12 +38,12 @@ export function DashboardHeader() {
   };
 
   const mobileNavItems = [
-    { icon: Home, label: "Dashboard", emoji: "🏠", path: "/dashboard" },
-    { icon: Heart, label: "Health", emoji: "💓", path: "/health" },
-    { icon: Brain, label: "Mental", emoji: "🧠", path: "/mental" },
-    { icon: Users, label: "Community", emoji: "🫂", path: "/community" },
-    { icon: Bot, label: "AI Chatbot", emoji: "🤖", path: "/ai-chatbot" },
-    { icon: Settings, label: "Settings", emoji: "⚙️", path: "/settings" },
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: Heart, label: "Health", path: "/health" },
+    { icon: Brain, label: "Mental", path: "/mental" },
+    { icon: Users, label: "Community", path: "/community" },
+    { icon: Bot, label: "AI Chatbot", path: "/ai-chatbot" },
+    { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
   return (
