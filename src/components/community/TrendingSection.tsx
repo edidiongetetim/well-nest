@@ -20,42 +20,73 @@ interface CommunityGroup {
   member_count: number;
 }
 
+// Placeholder data
+const placeholderHashtags: Hashtag[] = [
+  { id: "1", tag: "SingleParents", usage_count: 15 },
+  { id: "2", tag: "FirstTrimesterTips", usage_count: 23 },
+  { id: "3", tag: "PostpartumSupport", usage_count: 18 },
+  { id: "4", tag: "PregnancyJourney", usage_count: 31 },
+  { id: "5", tag: "NewMomLife", usage_count: 27 },
+  { id: "6", tag: "MentalHealthMatters", usage_count: 19 },
+  { id: "7", tag: "SelfCare", usage_count: 14 },
+  { id: "8", tag: "PartnerSupport", usage_count: 12 },
+];
+
+const placeholderGroups: CommunityGroup[] = [
+  {
+    id: "1",
+    name: "Single Parents Support",
+    description: "A supportive community for single parents navigating parenthood alone",
+    is_featured: false,
+    member_count: 234
+  },
+  {
+    id: "2",
+    name: "First Trimester Circle",
+    description: "Share experiences and tips for early pregnancy",
+    is_featured: false,
+    member_count: 156
+  },
+  {
+    id: "3",
+    name: "Postpartum Warriors",
+    description: "Support for mothers in their postpartum journey",
+    is_featured: false,
+    member_count: 189
+  },
+  {
+    id: "4",
+    name: "Working Moms Unite",
+    description: "Balancing career and motherhood together",
+    is_featured: false,
+    member_count: 278
+  },
+  {
+    id: "5",
+    name: "Teen Mom Support",
+    description: "A safe space for young mothers",
+    is_featured: false,
+    member_count: 89
+  },
+  {
+    id: "6",
+    name: "Rainbow Baby Families",
+    description: "Support for families after pregnancy loss",
+    is_featured: false,
+    member_count: 67
+  }
+];
+
 export function TrendingSection() {
-  const [hashtags, setHashtags] = useState<Hashtag[]>([]);
-  const [groups, setGroups] = useState<CommunityGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [hashtags, setHashtags] = useState<Hashtag[]>(placeholderHashtags);
+  const [groups, setGroups] = useState<CommunityGroup[]>(placeholderGroups);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchTrendingData = async () => {
-      try {
-        // Fetch trending hashtags
-        const { data: hashtagData, error: hashtagError } = await supabase
-          .from("hashtags")
-          .select("*")
-          .order("usage_count", { ascending: false })
-          .limit(8);
-
-        if (hashtagError) throw hashtagError;
-        setHashtags(hashtagData || []);
-
-        // Fetch featured groups
-        const { data: groupData, error: groupError } = await supabase
-          .from("community_groups")
-          .select("*")
-          .eq("is_featured", true)
-          .order("member_count", { ascending: false })
-          .limit(6);
-
-        if (groupError) throw groupError;
-        setGroups(groupData || []);
-      } catch (error) {
-        console.error("Error fetching trending data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrendingData();
+    // For now, we'll use placeholder data
+    // In the future, this will fetch from Supabase
+    setHashtags(placeholderHashtags);
+    setGroups(placeholderGroups);
   }, []);
 
   if (loading) {
@@ -87,16 +118,16 @@ export function TrendingSection() {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 gap-2">
-            {hashtags.map((hashtag) => (
+            {hashtags.slice(0, 8).map((hashtag) => (
               <Button
                 key={hashtag.id}
                 variant="ghost"
-                className="justify-start h-auto p-2 hover:bg-purple-50"
+                className="justify-start h-auto p-3 hover:bg-purple-50 transition-colors"
               >
                 <div className="flex items-center gap-2 w-full">
-                  <Hash className="w-4 h-4 text-purple-500" />
-                  <div className="text-left">
-                    <p className="font-poppins font-medium text-sm">#{hashtag.tag}</p>
+                  <Hash className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                  <div className="text-left min-w-0">
+                    <p className="font-poppins font-medium text-sm truncate">#{hashtag.tag}</p>
                     <p className="text-xs text-gray-500">{hashtag.usage_count} posts</p>
                   </div>
                 </div>
@@ -106,37 +137,30 @@ export function TrendingSection() {
         </CardContent>
       </Card>
 
-      {/* Featured Groups */}
+      {/* Community Groups */}
       <Card className="bg-white shadow-sm border border-gray-100">
         <CardHeader className="pb-3">
           <CardTitle className="font-poppins text-lg flex items-center gap-2">
             <Users className="w-5 h-5 text-purple-600" />
-            Featured Groups
+            Community Groups
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="space-y-3">
-            {groups.map((group) => (
-              <div key={group.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-poppins font-medium text-sm mb-1">{group.name}</h4>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{group.description}</p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {group.member_count} members
-                      </Badge>
-                      {group.is_featured && (
-                        <Badge className="text-xs bg-purple-100 text-purple-700">
-                          Featured
-                        </Badge>
-                      )}
-                    </div>
+          <div className="space-y-4">
+            {groups.slice(0, 6).map((group) => (
+              <div key={group.id} className="p-4 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-poppins font-medium text-sm mb-2">{group.name}</h4>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">{group.description}</p>
+                    <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                      {group.member_count} members
+                    </Badge>
                   </div>
+                  <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white font-poppins">
+                    Join Group
+                  </Button>
                 </div>
-                <Button size="sm" className="w-full mt-3 bg-purple-600 hover:bg-purple-700 text-white">
-                  Join Group
-                </Button>
               </div>
             ))}
           </div>
@@ -147,15 +171,15 @@ export function TrendingSection() {
       <Card className="bg-gradient-to-r from-purple-50 to-mint-50 border border-purple-100">
         <CardContent className="p-4">
           <div className="text-center">
-            <h3 className="font-poppins font-semibold text-purple-700 mb-2">Community Stats</h3>
+            <h3 className="font-poppins font-semibold text-purple-700 mb-3">Community Stats</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="font-bold text-purple-600">2.4k+</p>
-                <p className="text-gray-600">Active Members</p>
+                <p className="font-bold text-purple-600 text-lg">2.4k+</p>
+                <p className="text-gray-600 text-xs">Active Members</p>
               </div>
               <div>
-                <p className="font-bold text-purple-600">15k+</p>
-                <p className="text-gray-600">Posts Shared</p>
+                <p className="font-bold text-purple-600 text-lg">15k+</p>
+                <p className="text-gray-600 text-xs">Posts Shared</p>
               </div>
             </div>
           </div>

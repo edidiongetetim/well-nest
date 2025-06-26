@@ -31,6 +31,15 @@ const visibilityOptions = [
   { value: "private", label: "Private", icon: UserX, description: "Only you can see this" },
 ];
 
+const hashtagColors = [
+  "bg-purple-50 text-purple-700 border-purple-200",
+  "bg-blue-50 text-blue-700 border-blue-200",
+  "bg-green-50 text-green-700 border-green-200",
+  "bg-pink-50 text-pink-700 border-pink-200",
+  "bg-yellow-50 text-yellow-700 border-yellow-200",
+  "bg-indigo-50 text-indigo-700 border-indigo-200",
+];
+
 export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
@@ -60,78 +69,18 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
   };
 
   const handleSubmit = async () => {
-    if (!content.trim() && !title.trim()) {
-      toast({
-        title: "Error",
-        description: "Please add some content to your post",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to create a post",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const postData = {
-        user_id: user.id,
-        title: title || "Community Post",
-        content: content,
-        mood: mood || null,
-        visibility: visibility,
-        is_anonymous: visibility === "anonymous",
-        hashtags: hashtags.length > 0 ? hashtags : null,
-        link_url: linkUrl || null,
-        link_title: linkTitle || null,
-      };
-
-      const { error } = await supabase
-        .from("posts")
-        .insert([postData]);
-
-      if (error) throw error;
-
-      // Clear form
-      setContent("");
-      setTitle("");
-      setMood("");
-      setVisibility("public");
-      setHashtags([]);
-      setLinkUrl("");
-      setLinkTitle("");
-      setShowLinkInput(false);
-
-      toast({
-        title: "Success!",
-        description: "Your post has been created",
-      });
-
-      onPostCreated();
-    } catch (error) {
-      console.error("Error creating post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create post. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // For now, this is disabled - just show a toast
+    toast({
+      title: "Coming Soon!",
+      description: "Post creation will be available in the next update.",
+    });
   };
 
   const selectedMood = moods.find(m => m.value === mood);
   const selectedVisibility = visibilityOptions.find(v => v.value === visibility);
 
   return (
-    <Card className="mb-6 bg-white shadow-sm border border-gray-100">
+    <Card className="mb-8 bg-white shadow-sm border border-gray-100">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <Avatar className="w-12 h-12">
@@ -141,12 +90,13 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
             </AvatarFallback>
           </Avatar>
           
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-6">
             <Input
               placeholder="Add a title (optional)"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="border-0 bg-gray-50 font-poppins text-lg placeholder:text-gray-400"
+              disabled
             />
             
             <Textarea
@@ -154,29 +104,39 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="border-0 bg-gray-50 resize-none font-poppins placeholder:text-gray-400 min-h-[100px]"
+              disabled
             />
 
             {/* Hashtags */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {hashtags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="bg-purple-100 text-purple-700">
-                    #{tag}
-                    <button onClick={() => removeHashtag(tag)} className="ml-1">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
+            <div className="space-y-4">
+              {hashtags.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {hashtags.map((tag, index) => (
+                    <Badge 
+                      key={tag} 
+                      className={`${hashtagColors[index % hashtagColors.length]} border rounded-full px-3 py-2 text-sm font-medium flex items-center justify-between`}
+                    >
+                      <span>#{tag}</span>
+                      <button 
+                        onClick={() => removeHashtag(tag)} 
+                        className="ml-2 hover:bg-black/10 rounded-full p-0.5 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2">
                 <Input
                   placeholder="Add hashtag..."
                   value={hashtagInput}
                   onChange={(e) => setHashtagInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddHashtag()}
-                  className="flex-1 h-8 text-sm"
+                  className="flex-1 h-9 text-sm"
+                  disabled
                 />
-                <Button size="sm" onClick={handleAddHashtag} disabled={!hashtagInput.trim()}>
+                <Button size="sm" onClick={handleAddHashtag} disabled>
                   Add
                 </Button>
               </div>
@@ -184,23 +144,26 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
 
             {/* Link Input */}
             {showLinkInput && (
-              <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
+              <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
                 <Input
                   placeholder="Link URL"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   className="text-sm"
+                  disabled
                 />
                 <Input
                   placeholder="Link title (optional)"
                   value={linkTitle}
                   onChange={(e) => setLinkTitle(e.target.value)}
                   className="text-sm"
+                  disabled
                 />
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setShowLinkInput(false)}
+                  disabled
                 >
                   Remove Link
                 </Button>
@@ -208,9 +171,9 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
             )}
 
             {/* Mood and Visibility Selection */}
-            <div className="flex gap-4">
-              <Select value={mood} onValueChange={setMood}>
-                <SelectTrigger className="w-40">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Select value={mood} onValueChange={setMood} disabled>
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="How are you feeling?" />
                 </SelectTrigger>
                 <SelectContent>
@@ -222,8 +185,8 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
                 </SelectContent>
               </Select>
 
-              <Select value={visibility} onValueChange={setVisibility}>
-                <SelectTrigger className="w-40">
+              <Select value={visibility} onValueChange={setVisibility} disabled>
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,28 +203,30 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
             </div>
 
             {/* Selected mood and visibility display */}
-            <div className="flex gap-2">
-              {selectedMood && (
-                <Badge className={selectedMood.color}>
-                  {selectedMood.label}
-                </Badge>
-              )}
-              {selectedVisibility && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <selectedVisibility.icon className="w-3 h-3" />
-                  {selectedVisibility.label}
-                </Badge>
-              )}
-            </div>
+            {(selectedMood || selectedVisibility) && (
+              <div className="flex flex-wrap gap-2">
+                {selectedMood && (
+                  <Badge className={selectedMood.color}>
+                    {selectedMood.label}
+                  </Badge>
+                )}
+                {selectedVisibility && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <selectedVisibility.icon className="w-3 h-3" />
+                    {selectedVisibility.label}
+                  </Badge>
+                )}
+              </div>
+            )}
 
             {/* Media buttons and Submit */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <div className="flex gap-2">
+            <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-500 hover:text-purple-600"
-                  onClick={() => imageInputRef.current?.click()}
+                  className="text-gray-400 cursor-not-allowed"
+                  disabled
                 >
                   <Camera className="w-4 h-4 mr-1" />
                   Photo
@@ -269,8 +234,8 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-500 hover:text-purple-600"
-                  onClick={() => videoInputRef.current?.click()}
+                  className="text-gray-400 cursor-not-allowed"
+                  disabled
                 >
                   <Video className="w-4 h-4 mr-1" />
                   Video
@@ -278,8 +243,8 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-500 hover:text-purple-600"
-                  onClick={() => audioInputRef.current?.click()}
+                  className="text-gray-400 cursor-not-allowed"
+                  disabled
                 >
                   <Mic className="w-4 h-4 mr-1" />
                   Audio
@@ -287,8 +252,8 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-500 hover:text-purple-600"
-                  onClick={() => setShowLinkInput(!showLinkInput)}
+                  className="text-gray-400 cursor-not-allowed"
+                  disabled
                 >
                   <Link2 className="w-4 h-4 mr-1" />
                   Link
@@ -297,10 +262,10 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
 
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting || (!content.trim() && !title.trim())}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-poppins"
+                disabled
+                className="bg-gray-300 text-gray-500 cursor-not-allowed font-poppins"
               >
-                {isSubmitting ? "Posting..." : "Share Post"}
+                Share Post
               </Button>
             </div>
 
@@ -310,30 +275,18 @@ export function CreatePostBox({ onPostCreated }: CreatePostBoxProps) {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => {
-                // TODO: Handle image upload
-                console.log("Image selected:", e.target.files?.[0]);
-              }}
             />
             <input
               ref={videoInputRef}
               type="file"
               accept="video/*"
               className="hidden"
-              onChange={(e) => {
-                // TODO: Handle video upload
-                console.log("Video selected:", e.target.files?.[0]);
-              }}
             />
             <input
               ref={audioInputRef}
               type="file"
               accept="audio/*"
               className="hidden"
-              onChange={(e) => {
-                // TODO: Handle audio upload
-                console.log("Audio selected:", e.target.files?.[0]);
-              }}
             />
           </div>
         </div>
