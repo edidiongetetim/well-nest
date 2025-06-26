@@ -25,9 +25,10 @@ const HeroSection = () => {
           <div className="mt-8">
             <Link to="/signup">
               <button 
-                className="px-6 py-3 text-white text-base font-medium rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out transform"
+                className="px-8 py-3.5 text-white text-base font-semibold rounded-3xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out transform h-12"
                 style={{
                   background: 'linear-gradient(to right, #A68AE6, #C3E8DE)',
+                  boxShadow: '0 4px 12px rgba(166, 138, 230, 0.25), 0 0 0 1px rgba(166, 138, 230, 0.1) inset',
                 }}
               >
                 Get Started

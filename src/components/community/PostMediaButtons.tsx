@@ -11,8 +11,6 @@ interface PostMediaButtonsProps {
 }
 
 export function PostMediaButtons({ 
-  onSubmit, 
-  isSubmitting, 
   showLinkInput, 
   setShowLinkInput 
 }: PostMediaButtonsProps) {
@@ -22,52 +20,42 @@ export function PostMediaButtons({
 
   return (
     <>
-      <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-            onClick={() => imageInputRef.current?.click()}
-          >
-            <Camera className="w-4 h-4 mr-1" />
-            Photo
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-            onClick={() => videoInputRef.current?.click()}
-          >
-            <Video className="w-4 h-4 mr-1" />
-            Video
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-            onClick={() => audioInputRef.current?.click()}
-          >
-            <Mic className="w-4 h-4 mr-1" />
-            Audio
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-            onClick={() => setShowLinkInput(!showLinkInput)}
-          >
-            <Link2 className="w-4 h-4 mr-1" />
-            Link
-          </Button>
-        </div>
-
+      <div className="flex flex-wrap gap-2">
         <Button
-          onClick={onSubmit}
-          disabled={isSubmitting}
-          className="bg-primary hover:bg-primary/90 text-white font-poppins"
+          variant="ghost"
+          size="sm"
+          className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+          onClick={() => imageInputRef.current?.click()}
         >
-          {isSubmitting ? "Sharing..." : "Share Post"}
+          <Camera className="w-4 h-4 mr-1" />
+          Photo
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+          onClick={() => videoInputRef.current?.click()}
+        >
+          <Video className="w-4 h-4 mr-1" />
+          Video
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+          onClick={() => audioInputRef.current?.click()}
+        >
+          <Mic className="w-4 h-4 mr-1" />
+          Audio
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+          onClick={() => setShowLinkInput(!showLinkInput)}
+        >
+          <Link2 className="w-4 h-4 mr-1" />
+          Link
         </Button>
       </div>
 
