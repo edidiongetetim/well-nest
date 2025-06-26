@@ -9,6 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      community_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          member_count: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          member_count?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          member_count?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          tag: string
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -182,39 +236,174 @@ export type Database = {
         }
         Relationships: []
       }
-      posts: {
+      post_comments: {
         Row: {
-          comments_count: number | null
           content: string
           created_at: string
           id: string
-          image_url: string | null
-          likes_count: number | null
-          title: string
+          is_anonymous: boolean | null
+          post_id: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          comments_count?: number | null
           content: string
           created_at?: string
           id?: string
-          image_url?: string | null
-          likes_count?: number | null
-          title: string
+          is_anonymous?: boolean | null
+          post_id: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          comments_count?: number | null
           content?: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_saves: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          audio_url: string | null
+          comments_count: number | null
+          content: string
+          created_at: string
+          hashtags: string[] | null
+          id: string
+          image_url: string | null
+          is_anonymous: boolean | null
+          likes_count: number | null
+          link_description: string | null
+          link_title: string | null
+          link_url: string | null
+          mood: string | null
+          saves_count: number | null
+          shares_count: number | null
+          title: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+          views_count: number | null
+          visibility: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          comments_count?: number | null
+          content: string
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
           image_url?: string | null
+          is_anonymous?: boolean | null
           likes_count?: number | null
+          link_description?: string | null
+          link_title?: string | null
+          link_url?: string | null
+          mood?: string | null
+          saves_count?: number | null
+          shares_count?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+          views_count?: number | null
+          visibility?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          comments_count?: number | null
+          content?: string
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_anonymous?: boolean | null
+          likes_count?: number | null
+          link_description?: string | null
+          link_title?: string | null
+          link_url?: string | null
+          mood?: string | null
+          saves_count?: number | null
+          shares_count?: number | null
           title?: string
           updated_at?: string
           user_id?: string
+          video_url?: string | null
+          views_count?: number | null
+          visibility?: string | null
         }
         Relationships: []
       }
@@ -287,6 +476,27 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
         }
         Relationships: []
       }
