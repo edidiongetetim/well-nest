@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -10,8 +11,93 @@ import { DynamicGreeting } from "@/components/DynamicGreeting";
 import { BabyMilestoneCard } from "@/components/BabyMilestoneCard";
 import { WellnessCards } from "@/components/WellnessCards";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
+
+interface HealthData {
+  physical: {
+    riskLevel: string;
+    variant: 'success' | 'warning' | 'danger';
+    lastUpdated: string;
+  } | null;
+  mental: {
+    riskLevel: string;
+    variant: 'success' | 'warning' | 'danger';
+    lastUpdated: string;
+  } | null;
+}
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [healthData, setHealthData] = useState<HealthData>({ physical: null, mental: null });
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchHealthData = async () => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Fetch latest physical health data
+      const { data: physicalData } = await supabase
+        .from('physical_health_checkins')
+        .select('risk_level, prediction_result, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // Fetch latest mental health data
+      const { data: mentalData } = await supabase
+        .from('mental_epds_results')
+        .select('assessment, epds_score, submitted_at')
+        .eq('user_id', user.id)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const getVariantFromRisk = (risk: string): 'success' | 'warning' | 'danger' => {
+        const lowerRisk = risk.toLowerCase();
+        if (lowerRisk.includes('low')) return 'success';
+        if (lowerRisk.includes('moderate') || lowerRisk.includes('medium')) return 'warning';
+        if (lowerRisk.includes('high')) return 'danger';
+        return 'warning';
+      };
+
+      const formatRiskLevel = (risk: string): string => {
+        const lowerRisk = risk.toLowerCase();
+        if (lowerRisk.includes('low')) return 'Low Risk';
+        if (lowerRisk.includes('moderate')) return 'Moderate Risk';
+        if (lowerRisk.includes('medium')) return 'Medium Risk';
+        if (lowerRisk.includes('high')) return 'High Risk';
+        return risk;
+      };
+
+      setHealthData({
+        physical: physicalData ? {
+          riskLevel: formatRiskLevel(physicalData.risk_level || physicalData.prediction_result || 'No data'),
+          variant: getVariantFromRisk(physicalData.risk_level || physicalData.prediction_result || 'medium'),
+          lastUpdated: format(new Date(physicalData.created_at), 'MMM d, yyyy')
+        } : null,
+        mental: mentalData ? {
+          riskLevel: formatRiskLevel(mentalData.assessment || `Score: ${mentalData.epds_score}`),
+          variant: getVariantFromRisk(mentalData.assessment || 'medium'),
+          lastUpdated: format(new Date(mentalData.submitted_at), 'MMM d, yyyy')
+        } : null
+      });
+    } catch (error) {
+      console.error('Error fetching health data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHealthData();
+  }, [user]);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -61,16 +147,20 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <HealthSummaryCard 
                   title="Today's Physical Health Summary"
-                  riskLevel="Low Risk"
+                  riskLevel={healthData.physical?.riskLevel || "No recent data"}
                   description="Your Physical Health Risk"
-                  variant="success"
+                  variant={healthData.physical?.variant || 'warning'}
+                  isLoading={isLoading}
+                  lastUpdated={healthData.physical?.lastUpdated}
                 />
                 
                 <HealthSummaryCard 
                   title="Today's Mental Health Summary"
-                  riskLevel="Medium Risk"
+                  riskLevel={healthData.mental?.riskLevel || "No recent data"}
                   description="Your Mental Health Risk"
-                  variant="warning"
+                  variant={healthData.mental?.variant || 'warning'}
+                  isLoading={isLoading}
+                  lastUpdated={healthData.mental?.lastUpdated}
                 />
                 
                 <EnhancedReminderCard />

@@ -108,21 +108,23 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
           boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.12)',
         }}
       >
-        <div className="relative p-6 sm:p-8 space-y-6">
-          {/* Header with single close button */}
-          <div className="flex items-center justify-between">
+        <div className="relative p-6 space-y-6">
+          {/* Single close button in top-right corner */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="absolute top-4 right-4 rounded-full h-8 w-8 p-0 hover:bg-gray-100 hover:scale-105 transition-all duration-200 z-10"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+
+          {/* Header */}
+          <div className="pt-2">
             <h2 className="font-poppins font-semibold text-xl text-gray-900">
               Create Post
             </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="absolute top-4 right-4 rounded-full h-8 w-8 p-0 hover:bg-gray-100 hover:scale-105 transition-all duration-200"
-              aria-label="Close"
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </div>
 
           {/* Post Form */}
