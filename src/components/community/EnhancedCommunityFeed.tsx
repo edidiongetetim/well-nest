@@ -23,7 +23,7 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
     setLoading(true);
     
     try {
-      // Fetch real posts from Supabase with proper join using profiles table directly
+      // Fetch real posts from Supabase with explicit join using user_id
       const { data: realPosts, error } = await supabase
         .from('posts')
         .select(`
@@ -46,13 +46,14 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
           saves_count,
           views_count,
           created_at,
-          profiles (
+          profiles!inner(
             first_name,
             last_name,
             avatar_url,
             phone_number
           )
         `)
+        .eq('profiles.id', 'posts.user_id')
         .order('created_at', { ascending: false })
         .limit(20);
 
