@@ -81,6 +81,7 @@ export function TrendingSection() {
   const [hashtags, setHashtags] = useState<Hashtag[]>(placeholderHashtags);
   const [groups, setGroups] = useState<CommunityGroup[]>(placeholderGroups);
   const [loading, setLoading] = useState(false);
+  const [showAllHashtags, setShowAllHashtags] = useState(false);
 
   useEffect(() => {
     // For now, we'll use placeholder data
@@ -106,6 +107,8 @@ export function TrendingSection() {
     );
   }
 
+  const displayedHashtags = showAllHashtags ? hashtags : hashtags.slice(0, 3);
+
   return (
     <div className="space-y-6">
       {/* Trending Hashtags */}
@@ -117,22 +120,36 @@ export function TrendingSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-2">
-            {hashtags.slice(0, 8).map((hashtag) => (
+          <div className="space-y-3">
+            {displayedHashtags.map((hashtag) => (
               <Button
                 key={hashtag.id}
                 variant="ghost"
-                className="justify-start h-auto p-3 hover:bg-purple-50 transition-colors"
+                className="justify-start h-auto p-3 hover:bg-purple-50 transition-colors w-full"
               >
-                <div className="flex items-center gap-2 w-full">
+                <div className="flex items-center gap-3 w-full">
                   <Hash className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                  <div className="text-left min-w-0">
-                    <p className="font-poppins font-medium text-sm truncate">#{hashtag.tag}</p>
-                    <p className="text-xs text-gray-500">{hashtag.usage_count} posts</p>
+                  <div className="text-left min-w-0 flex-1">
+                    <p className="font-poppins font-medium text-sm truncate leading-relaxed">
+                      #{hashtag.tag}
+                    </p>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {hashtag.usage_count} posts
+                    </p>
                   </div>
                 </div>
               </Button>
             ))}
+            
+            {hashtags.length > 3 && (
+              <Button
+                variant="ghost"
+                className="text-sm text-purple-400 hover:text-purple-600 font-poppins p-2 h-auto"
+                onClick={() => setShowAllHashtags(!showAllHashtags)}
+              >
+                {showAllHashtags ? "Show less" : "Show more"}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

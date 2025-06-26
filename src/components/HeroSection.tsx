@@ -22,17 +22,18 @@ const HeroSection = () => {
             </p>
           </div>
           
-          <Link to="/signup">
-            <button 
-              className="w-72 h-24 text-white text-lg font-medium rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out"
-              style={{
-                background: 'linear-gradient(to right, #A68AE6, #C3E8DE)',
-                borderRadius: '999px'
-              }}
-            >
-              Get Started
-            </button>
-          </Link>
+          <div className="mt-8">
+            <Link to="/signup">
+              <button 
+                className="px-6 py-3 text-white text-base font-medium rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out transform"
+                style={{
+                  background: 'linear-gradient(to right, #A68AE6, #C3E8DE)',
+                }}
+              >
+                Get Started
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* Right Content - Logo */}

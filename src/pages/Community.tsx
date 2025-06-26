@@ -4,7 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreatePostBox } from "@/components/community/CreatePostBox";
+import { CompactPostComposer } from "@/components/community/CompactPostComposer";
 import { EnhancedCommunityFeed } from "@/components/community/EnhancedCommunityFeed";
 import { CommunitySearch } from "@/components/CommunitySearch";
 import { TrendingSection } from "@/components/community/TrendingSection";
@@ -39,8 +39,8 @@ const Community = () => {
                     </p>
                   </div>
 
-                  {/* Create Post Box */}
-                  <CreatePostBox onPostCreated={handlePostCreated} />
+                  {/* Compact Post Composer */}
+                  <CompactPostComposer onPostCreated={handlePostCreated} />
 
                   {/* Tabs and Search */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
