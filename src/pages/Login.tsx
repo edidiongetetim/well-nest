@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ const Login = () => {
           title: "Welcome back!",
           description: "You have been successfully logged in.",
         });
-        navigate('/dashboard');
+        navigate('/auth-callback');
       }
     } catch (error) {
       console.error('Unexpected login error:', error);
@@ -68,7 +69,7 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth-callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

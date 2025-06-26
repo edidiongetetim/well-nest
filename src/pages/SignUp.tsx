@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -64,7 +63,7 @@ const SignUp = () => {
             first_name: formData.firstName,
             last_name: formData.lastName,
           },
-          emailRedirectTo: `${window.location.origin}/onboarding`
+          emailRedirectTo: `${window.location.origin}/auth-callback`
         }
       });
 
@@ -108,7 +107,7 @@ const SignUp = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`
+          redirectTo: `${window.location.origin}/auth-callback`
         }
       });
 
