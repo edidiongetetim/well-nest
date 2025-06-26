@@ -35,7 +35,7 @@ const Community = () => {
                       Community
                     </h1>
                     <p className="font-poppins text-gray-600">
-                      Connect with other moms and share your journey together
+                      Connect with other parents and share your journey together
                     </p>
                   </div>
 

@@ -8,6 +8,7 @@ import { EnhancedReminderCard } from "@/components/EnhancedReminderCard";
 import { MeditationCard } from "@/components/MeditationCard";
 import { DynamicGreeting } from "@/components/DynamicGreeting";
 import { BabyMilestoneCard } from "@/components/BabyMilestoneCard";
+import { WellnessCards } from "@/components/WellnessCards";
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
@@ -75,7 +76,7 @@ const Dashboard = () => {
                 <EnhancedReminderCard />
               </div>
 
-              {/* Bottom Section */}
+              {/* Wellness Section */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <MeditationCard />
                 
@@ -85,6 +86,9 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Recommended Wellness Content */}
+              <WellnessCards />
 
               {/* Footer with Return to Main Site Link */}
               <div className="text-center pt-8 pb-4">
