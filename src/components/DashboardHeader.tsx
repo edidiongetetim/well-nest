@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Search, Menu, X, Home, Heart, Brain, Users, Robot, Settings } from "lucide-react";
+import { Search, Menu, X, Home, Heart, Brain, Users, Bot, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProfileDropdown } from "./ProfileDropdown";
@@ -42,7 +42,7 @@ export function DashboardHeader() {
     { icon: Heart, label: "Health", emoji: "💓", path: "/health" },
     { icon: Brain, label: "Mental", emoji: "🧠", path: "/mental" },
     { icon: Users, label: "Community", emoji: "🫂", path: "/community" },
-    { icon: Robot, label: "AI Chatbot", emoji: "🤖", path: "/ai-chatbot" },
+    { icon: Bot, label: "AI Chatbot", emoji: "🤖", path: "/ai-chatbot" },
     { icon: Settings, label: "Settings", emoji: "⚙️", path: "/settings" },
   ];
 
