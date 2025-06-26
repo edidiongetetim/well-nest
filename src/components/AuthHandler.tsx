@@ -29,8 +29,9 @@ export const AuthHandler = () => {
           return;
         }
 
-        // Check if user has completed onboarding
-        const hasCompletedOnboarding = profile?.app_preferences?.onboardingCompleted;
+        // Check if user has completed onboarding with proper type checking
+        const appPreferences = profile?.app_preferences as { onboardingCompleted?: boolean } | null;
+        const hasCompletedOnboarding = appPreferences?.onboardingCompleted === true;
 
         if (!hasCompletedOnboarding) {
           console.log('User needs onboarding, redirecting...');
