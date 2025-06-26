@@ -23,6 +23,7 @@ import EditProfile from "./pages/EditProfile";
 import VirtualCompanion from "./pages/VirtualCompanion";
 import Community from "./pages/Community";
 import Settings from "./pages/Settings";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/auth-callback" element={<AuthCallback />} />
               <Route path="/health" element={<Health />} />
               <Route path="/health-check-in" element={<HealthCheckIn />} />
               <Route path="/mental" element={<Mental />} />
