@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Baby, Heart, Users, Bot, Gear } from "lucide-react";
+import { Baby, Heart, Users, Bot, Settings } from "lucide-react";
 import { useState } from "react";
 
 interface JourneyStageSelectionProps {
@@ -52,7 +52,7 @@ export const JourneyStageSelection = ({ onNext, onSelect, selectedStage }: Journ
       id: "Other",
       label: "Other",
       description: "Something else",
-      icon: Gear,
+      icon: Settings,
       color: "from-gray-100 to-gray-50",
       available: false
     }
