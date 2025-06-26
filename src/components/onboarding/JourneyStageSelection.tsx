@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Baby, Heart, Users, Sparkles } from "lucide-react";
+import { Baby, Heart, Users, Stethoscope, Ellipsis } from "lucide-react";
 
 interface JourneyStageSelectionProps {
   onNext: () => void;
@@ -26,18 +26,25 @@ export const JourneyStageSelection = ({ onNext, onSelect, selectedStage }: Journ
       color: "from-pink-100 to-pink-50"
     },
     {
-      id: "Trying to Conceive",
-      label: "Trying to Conceive",
-      description: "Planning for pregnancy",
-      icon: Sparkles,
-      color: "from-green-100 to-green-50"
-    },
-    {
-      id: "Support Person",
-      label: "Support Person",
+      id: "Support Partner",
+      label: "Support Partner",
       description: "Supporting someone else",
       icon: Users,
       color: "from-blue-100 to-blue-50"
+    },
+    {
+      id: "Care Provider",
+      label: "Care Provider",
+      description: "Healthcare professional",
+      icon: Stethoscope,
+      color: "from-green-100 to-green-50"
+    },
+    {
+      id: "Other",
+      label: "Other",
+      description: "Something else",
+      icon: Ellipsis,
+      color: "from-gray-100 to-gray-50"
     }
   ];
 
@@ -56,7 +63,7 @@ export const JourneyStageSelection = ({ onNext, onSelect, selectedStage }: Journ
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stages.map((stage) => {
           const IconComponent = stage.icon;
           return (

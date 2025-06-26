@@ -3,9 +3,9 @@ import { useState } from "react";
 import { WelcomeScreen } from "@/components/onboarding/WelcomeScreen";
 import { JourneyStageSelection } from "@/components/onboarding/JourneyStageSelection";
 import { PregnancyDetails } from "@/components/onboarding/PregnancyDetails";
+import { PostpartumDetails } from "@/components/onboarding/PostpartumDetails";
 import { SupportPreferences } from "@/components/onboarding/SupportPreferences";
-import { MiniCheckIn } from "@/components/onboarding/MiniCheckIn";
-import { MeetNestie } from "@/components/onboarding/MeetNestie";
+import { HealthAssessmentsScreen } from "@/components/onboarding/HealthAssessmentsScreen";
 import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,13 +15,18 @@ import { useToast } from "@/hooks/use-toast";
 export interface OnboardingData {
   journeyStage: string;
   pregnancyWeek?: number;
+  babyBirthDate?: string;
+  babyWeight?: number;
   supportPreferences: {
     healthReminders: boolean;
     emotionalSupport: boolean;
     nestieNotes: boolean;
     appointmentReminders: boolean;
   };
-  hasCompletedCheckIn: boolean;
+  completedAssessments: {
+    physical: boolean;
+    mental: boolean;
+  };
 }
 
 const Onboarding = () => {
@@ -34,7 +39,10 @@ const Onboarding = () => {
       nestieNotes: false,
       appointmentReminders: false,
     },
-    hasCompletedCheckIn: false,
+    completedAssessments: {
+      physical: false,
+      mental: false,
+    },
   });
 
   const navigate = useNavigate();
@@ -47,10 +55,6 @@ const Onboarding = () => {
 
   const nextStep = () => {
     setCurrentStep(prev => prev + 1);
-  };
-
-  const skipToEnd = () => {
-    setCurrentStep(6);
   };
 
   const completeOnboarding = async () => {
@@ -69,7 +73,6 @@ const Onboarding = () => {
     }
 
     try {
-      // Use UPSERT to handle cases where profile doesn't exist
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -103,7 +106,6 @@ const Onboarding = () => {
       });
     }
 
-    // Always navigate to dashboard, regardless of database operation success
     console.log('Navigating to dashboard...');
     navigate('/dashboard');
   };
@@ -127,6 +129,16 @@ const Onboarding = () => {
             onSelect={(week) => updateOnboardingData({ pregnancyWeek: week })}
             selectedWeek={onboardingData.pregnancyWeek}
           />
+        ) : onboardingData.journeyStage === "Postpartum" ? (
+          <PostpartumDetails
+            onNext={nextStep}
+            onSelect={(birthDate, weight) => updateOnboardingData({ 
+              babyBirthDate: birthDate, 
+              babyWeight: weight 
+            })}
+            selectedBirthDate={onboardingData.babyBirthDate}
+            selectedWeight={onboardingData.babyWeight}
+          />
         ) : null;
       case 3:
         return (
@@ -138,23 +150,28 @@ const Onboarding = () => {
         );
       case 4:
         return (
-          <MiniCheckIn
+          <HealthAssessmentsScreen
             onNext={nextStep}
-            onSkip={skipToEnd}
-            onComplete={(completed) => updateOnboardingData({ hasCompletedCheckIn: completed })}
+            completedAssessments={onboardingData.completedAssessments}
+            onAssessmentComplete={(type) => 
+              updateOnboardingData({ 
+                completedAssessments: { 
+                  ...onboardingData.completedAssessments, 
+                  [type]: true 
+                } 
+              })
+            }
           />
         );
       case 5:
-        return <MeetNestie onNext={nextStep} />;
-      case 6:
         return <OnboardingComplete onComplete={completeOnboarding} />;
       default:
         return <WelcomeScreen onNext={nextStep} />;
     }
   };
 
-  // Skip pregnancy details if not pregnant
-  if (currentStep === 2 && onboardingData.journeyStage !== "Pregnant") {
+  // Skip pregnancy/postpartum details if not relevant
+  if (currentStep === 2 && !["Pregnant", "Postpartum"].includes(onboardingData.journeyStage)) {
     setCurrentStep(3);
   }
 
