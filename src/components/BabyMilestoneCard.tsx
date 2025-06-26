@@ -4,6 +4,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface OnboardingData {
+  journeyStage?: string;
+  pregnancyWeek?: number;
+  babyBirthDate?: string;
+  babyWeight?: number;
+  onboardingCompleted?: boolean;
+  completedAt?: string;
+}
+
 export function BabyMilestoneCard() {
   const { user } = useAuth();
 
@@ -24,7 +33,24 @@ export function BabyMilestoneCard() {
     enabled: !!user,
   });
 
-  const onboardingData = profile?.app_preferences;
+  // Safely cast and validate the onboarding data
+  const onboardingData: OnboardingData | null = (() => {
+    if (!profile?.app_preferences) return null;
+    
+    try {
+      // Handle both object and string cases
+      if (typeof profile.app_preferences === 'string') {
+        return JSON.parse(profile.app_preferences) as OnboardingData;
+      } else if (typeof profile.app_preferences === 'object' && profile.app_preferences !== null) {
+        return profile.app_preferences as OnboardingData;
+      }
+    } catch (error) {
+      console.error('Error parsing app_preferences:', error);
+    }
+    
+    return null;
+  })();
+
   const journeyStage = onboardingData?.journeyStage;
   
   // Handle pregnancy scenario
