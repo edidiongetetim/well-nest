@@ -23,68 +23,71 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
     setLoading(true);
     
     try {
-      // Fetch real posts from Supabase with correct foreign key join
-      const { data: realPosts, error } = await supabase
+      // Fetch posts first, then get profile data separately
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          id,
-          user_id,
-          title,
-          content,
-          mood,
-          image_url,
-          video_url,
-          audio_url,
-          link_url,
-          link_title,
-          hashtags,
-          visibility,
-          is_anonymous,
-          likes_count,
-          comments_count,
-          shares_count,
-          saves_count,
-          views_count,
-          created_at,
-          profiles!posts_user_id_fkey(
-            first_name,
-            last_name,
-            avatar_url,
-            phone_number
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) {
-        console.error('Error fetching posts:', error);
+      if (postsError) {
+        console.error('Error fetching posts:', postsError);
         setPosts(placeholderPosts);
-      } else {
-        // Transform the data to match our Post interface
-        const transformedPosts = (realPosts || []).map(post => ({
-          ...post,
-          profiles: post.profiles ? {
-            first_name: post.profiles.first_name,
-            last_name: post.profiles.last_name,
-            avatar_url: post.profiles.avatar_url,
-            pregnancy_weeks: null,
-            pronouns: null
-          } : null
-        }));
-
-        // Combine real posts with placeholder posts
-        const combinedPosts = [...transformedPosts, ...placeholderPosts];
-
-        // Simple filtering based on feedType
-        let filteredPosts = [...combinedPosts];
-        if (feedType === "new") {
-          filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        } else if (feedType === "suggested") {
-          filteredPosts = filteredPosts.filter(post => post.likes_count > 15);
-        }
-        
-        setPosts(filteredPosts);
+        setLoading(false);
+        return;
       }
+
+      if (!postsData || postsData.length === 0) {
+        setPosts(placeholderPosts);
+        setLoading(false);
+        return;
+      }
+
+      // Get unique user IDs from posts
+      const userIds = [...new Set(postsData.map(post => post.user_id))];
+
+      // Fetch profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url, phone_number')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      // Create a map of profiles by user_id
+      const profilesMap = new Map();
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          profilesMap.set(profile.id, profile);
+        });
+      }
+
+      // Transform the data to match our Post interface
+      const transformedPosts = postsData.map(post => ({
+        ...post,
+        profiles: profilesMap.get(post.user_id) ? {
+          first_name: profilesMap.get(post.user_id).first_name,
+          last_name: profilesMap.get(post.user_id).last_name,
+          avatar_url: profilesMap.get(post.user_id).avatar_url,
+          pregnancy_weeks: null,
+          pronouns: null
+        } : null
+      }));
+
+      // Combine real posts with placeholder posts
+      const combinedPosts = [...transformedPosts, ...placeholderPosts];
+
+      // Simple filtering based on feedType
+      let filteredPosts = [...combinedPosts];
+      if (feedType === "new") {
+        filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      } else if (feedType === "suggested") {
+        filteredPosts = filteredPosts.filter(post => post.likes_count > 15);
+      }
+      
+      setPosts(filteredPosts);
     } catch (error) {
       console.error('Error:', error);
       setPosts(placeholderPosts);
