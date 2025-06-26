@@ -5,6 +5,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PostCard } from "./PostCard";
 import { Post, Reaction } from "./types";
 import { placeholderPosts } from "./placeholderData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EnhancedCommunityFeedProps {
   feedType: "suggested" | "following" | "new";
@@ -12,67 +14,199 @@ interface EnhancedCommunityFeedProps {
 }
 
 export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedCommunityFeedProps) {
-  const [posts, setPosts] = useState<Post[]>(placeholderPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [userReactions, setUserReactions] = useState<Record<string, Reaction[]>>({});
   const [userSaves, setUserSaves] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
 
   const fetchPosts = async () => {
     setLoading(true);
     
-    // Simulate API delay
-    setTimeout(() => {
-      let filteredPosts = [...placeholderPosts];
-      
-      // Simple filtering based on feedType
-      if (feedType === "new") {
-        filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      } else if (feedType === "suggested") {
-        filteredPosts = filteredPosts.filter(post => post.likes_count > 15);
+    try {
+      // Fetch real posts from Supabase
+      const { data: realPosts, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (
+            first_name,
+            last_name,
+            avatar_url,
+            pronouns
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error('Error fetching posts:', error);
+        setPosts(placeholderPosts);
+      } else {
+        // Combine real posts with placeholder posts
+        const combinedPosts = [
+          ...(realPosts || []).map(post => ({
+            ...post,
+            profiles: post.profiles ? {
+              first_name: post.profiles.first_name,
+              last_name: post.profiles.last_name,
+              avatar_url: post.profiles.avatar_url,
+              pregnancy_weeks: null,
+              pronouns: post.profiles.pronouns || null
+            } : null
+          })),
+          ...placeholderPosts
+        ];
+
+        // Simple filtering based on feedType
+        let filteredPosts = [...combinedPosts];
+        if (feedType === "new") {
+          filteredPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        } else if (feedType === "suggested") {
+          filteredPosts = filteredPosts.filter(post => post.likes_count > 15);
+        }
+        
+        setPosts(filteredPosts);
       }
-      
-      setPosts(filteredPosts);
+    } catch (error) {
+      console.error('Error:', error);
+      setPosts(placeholderPosts);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  const fetchUserReactions = async () => {
+    if (!user) return;
+
+    try {
+      const { data: reactions } = await supabase
+        .from('post_reactions')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (reactions) {
+        const reactionsByPost = reactions.reduce((acc, reaction) => {
+          if (!acc[reaction.post_id]) acc[reaction.post_id] = [];
+          acc[reaction.post_id].push(reaction);
+          return acc;
+        }, {} as Record<string, Reaction[]>);
+        
+        setUserReactions(reactionsByPost);
+      }
+    } catch (error) {
+      console.error('Error fetching user reactions:', error);
+    }
+  };
+
+  const fetchUserSaves = async () => {
+    if (!user) return;
+
+    try {
+      const { data: saves } = await supabase
+        .from('post_saves')
+        .select('post_id')
+        .eq('user_id', user.id);
+
+      if (saves) {
+        setUserSaves(new Set(saves.map(save => save.post_id)));
+      }
+    } catch (error) {
+      console.error('Error fetching user saves:', error);
+    }
   };
 
   useEffect(() => {
     fetchPosts();
-  }, [feedType, refreshTrigger]);
+    if (user) {
+      fetchUserReactions();
+      fetchUserSaves();
+    }
+  }, [feedType, refreshTrigger, user]);
 
   const handleReaction = async (postId: string, reactionType: string) => {
+    if (!user) return;
+
+    // Skip for placeholder posts
+    if (postId.startsWith('placeholder-')) return;
+
     const existingReaction = userReactions[postId]?.find(r => r.reaction_type === reactionType);
     
-    if (existingReaction) {
-      // Remove reaction
-      setUserReactions(prev => ({
-        ...prev,
-        [postId]: prev[postId]?.filter(r => r.id !== existingReaction.id) || []
-      }));
-    } else {
-      // Add reaction
-      const newReaction = {
-        id: `reaction-${Date.now()}`,
-        reaction_type: reactionType,
-        user_id: "current-user"
-      };
-      
-      setUserReactions(prev => ({
-        ...prev,
-        [postId]: [...(prev[postId] || []), newReaction]
-      }));
+    try {
+      if (existingReaction) {
+        // Remove reaction
+        const { error } = await supabase
+          .from('post_reactions')
+          .delete()
+          .eq('id', existingReaction.id);
+
+        if (!error) {
+          setUserReactions(prev => ({
+            ...prev,
+            [postId]: prev[postId]?.filter(r => r.id !== existingReaction.id) || []
+          }));
+        }
+      } else {
+        // Add reaction
+        const { data, error } = await supabase
+          .from('post_reactions')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            reaction_type: reactionType
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          setUserReactions(prev => ({
+            ...prev,
+            [postId]: [...(prev[postId] || []), data]
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error handling reaction:', error);
     }
   };
 
   const handleSave = async (postId: string) => {
-    if (userSaves.has(postId)) {
-      setUserSaves(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(postId);
-        return newSet;
-      });
-    } else {
-      setUserSaves(prev => new Set([...prev, postId]));
+    if (!user) return;
+
+    // Skip for placeholder posts
+    if (postId.startsWith('placeholder-')) return;
+
+    try {
+      if (userSaves.has(postId)) {
+        // Remove save
+        const { error } = await supabase
+          .from('post_saves')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+
+        if (!error) {
+          setUserSaves(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(postId);
+            return newSet;
+          });
+        }
+      } else {
+        // Add save
+        const { error } = await supabase
+          .from('post_saves')
+          .insert({
+            post_id: postId,
+            user_id: user.id
+          });
+
+        if (!error) {
+          setUserSaves(prev => new Set([...prev, postId]));
+        }
+      }
+    } catch (error) {
+      console.error('Error handling save:', error);
     }
   };
 

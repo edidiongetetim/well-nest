@@ -1,52 +1,114 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-// Mock user data - in a real app, this would come from your database
-const mockUsers = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    avatar: "/placeholder.svg",
-    bio: "First-time mom, 24 weeks pregnant",
-    isFollowing: false,
-  },
-  {
-    id: "2",
-    name: "Emily Chen",
-    avatar: "/placeholder.svg",
-    bio: "Mom of twins, sharing the journey",
-    isFollowing: true,
-  },
-  {
-    id: "3",
-    name: "Maria Rodriguez",
-    avatar: "/placeholder.svg",
-    bio: "Wellness enthusiast and new mom",
-    isFollowing: false,
-  },
-];
+interface UserProfile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+}
 
 export function CommunitySearch() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [followingUsers, setFollowingUsers] = useState(
-    mockUsers.reduce((acc, user) => ({ ...acc, [user.id]: user.isFollowing }), {})
-  );
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
-  const filteredUsers = mockUsers.filter(user =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.length > 0
-  );
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      searchUsers();
+    } else {
+      setUsers([]);
+    }
+  }, [searchQuery]);
 
-  const handleFollow = (userId: string) => {
-    setFollowingUsers(prev => ({
-      ...prev,
-      [userId]: !prev[userId]
-    }));
+  const searchUsers = async () => {
+    if (!searchQuery.trim()) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%`)
+        .limit(10);
+
+      if (error) {
+        console.error('Error searching users:', error);
+        return;
+      }
+
+      setUsers(data || []);
+
+      // Check which users the current user is following
+      if (user && data) {
+        const { data: follows } = await supabase
+          .from('user_follows')
+          .select('following_id')
+          .eq('follower_id', user.id)
+          .in('following_id', data.map(u => u.id));
+
+        const followingSet = new Set(follows?.map(f => f.following_id) || []);
+        const followingState = data.reduce((acc, u) => {
+          acc[u.id] = followingSet.has(u.id);
+          return acc;
+        }, {} as Record<string, boolean>);
+
+        setFollowingUsers(followingState);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFollow = async (userId: string) => {
+    if (!user) return;
+
+    try {
+      if (followingUsers[userId]) {
+        // Unfollow
+        const { error } = await supabase
+          .from('user_follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+
+        if (!error) {
+          setFollowingUsers(prev => ({ ...prev, [userId]: false }));
+        }
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from('user_follows')
+          .insert({
+            follower_id: user.id,
+            following_id: userId
+          });
+
+        if (!error) {
+          setFollowingUsers(prev => ({ ...prev, [userId]: true }));
+        }
+      }
+    } catch (error) {
+      console.error('Error handling follow:', error);
+    }
+  };
+
+  const getDisplayName = (user: UserProfile) => {
+    const firstName = user.first_name || "";
+    const lastName = user.last_name || "";
+    return `${firstName} ${lastName}`.trim() || "Anonymous User";
   };
 
   return (
@@ -67,36 +129,42 @@ export function CommunitySearch() {
         />
       </div>
 
-      {showResults && filteredUsers.length > 0 && (
+      {showResults && users.length > 0 && (
         <Card className="absolute top-full left-0 right-0 mt-2 z-50 max-h-80 overflow-y-auto">
           <CardContent className="p-2">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="bg-purple-100 text-purple-600">
-                      {user.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-poppins font-medium text-sm">{user.name}</p>
-                    <p className="font-poppins text-xs text-gray-500 truncate">{user.bio}</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant={followingUsers[user.id] ? "outline" : "default"}
-                  onClick={() => handleFollow(user.id)}
-                  className="font-poppins text-xs"
+            {loading ? (
+              <div className="p-3 text-center text-gray-500">Searching...</div>
+            ) : (
+              users.map((searchUser) => (
+                <div
+                  key={searchUser.id}
+                  className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
                 >
-                  {followingUsers[user.id] ? "Following" : "Follow"}
-                </Button>
-              </div>
-            ))}
+                  <div className="flex items-center gap-3 flex-1">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={searchUser.avatar_url || undefined} alt={getDisplayName(searchUser)} />
+                      <AvatarFallback className="bg-purple-100 text-purple-600">
+                        {getDisplayName(searchUser).split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-poppins font-medium text-sm">{getDisplayName(searchUser)}</p>
+                      <p className="font-poppins text-xs text-gray-500">Community Member</p>
+                    </div>
+                  </div>
+                  {user && searchUser.id !== user.id && (
+                    <Button
+                      size="sm"
+                      variant={followingUsers[searchUser.id] ? "outline" : "default"}
+                      onClick={() => handleFollow(searchUser.id)}
+                      className="font-poppins text-xs"
+                    >
+                      {followingUsers[searchUser.id] ? "Following" : "Follow"}
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       )}

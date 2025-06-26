@@ -28,20 +28,17 @@ export function PostLinkInput({
         value={linkUrl}
         onChange={(e) => setLinkUrl(e.target.value)}
         className="text-sm"
-        disabled
       />
       <Input
         placeholder="Link title (optional)"
         value={linkTitle}
         onChange={(e) => setLinkTitle(e.target.value)}
         className="text-sm"
-        disabled
       />
       <Button
         size="sm"
         variant="outline"
         onClick={() => setShowLinkInput(false)}
-        disabled
       >
         Remove Link
       </Button>

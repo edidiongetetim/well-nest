@@ -6,9 +6,16 @@ import { Camera, Video, Mic, Link2 } from "lucide-react";
 interface PostMediaButtonsProps {
   onSubmit: () => void;
   isSubmitting: boolean;
+  showLinkInput: boolean;
+  setShowLinkInput: (show: boolean) => void;
 }
 
-export function PostMediaButtons({ onSubmit, isSubmitting }: PostMediaButtonsProps) {
+export function PostMediaButtons({ 
+  onSubmit, 
+  isSubmitting, 
+  showLinkInput, 
+  setShowLinkInput 
+}: PostMediaButtonsProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
@@ -20,8 +27,8 @@ export function PostMediaButtons({ onSubmit, isSubmitting }: PostMediaButtonsPro
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 cursor-not-allowed"
-            disabled
+            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+            onClick={() => imageInputRef.current?.click()}
           >
             <Camera className="w-4 h-4 mr-1" />
             Photo
@@ -29,8 +36,8 @@ export function PostMediaButtons({ onSubmit, isSubmitting }: PostMediaButtonsPro
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 cursor-not-allowed"
-            disabled
+            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+            onClick={() => videoInputRef.current?.click()}
           >
             <Video className="w-4 h-4 mr-1" />
             Video
@@ -38,8 +45,8 @@ export function PostMediaButtons({ onSubmit, isSubmitting }: PostMediaButtonsPro
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 cursor-not-allowed"
-            disabled
+            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+            onClick={() => audioInputRef.current?.click()}
           >
             <Mic className="w-4 h-4 mr-1" />
             Audio
@@ -47,8 +54,8 @@ export function PostMediaButtons({ onSubmit, isSubmitting }: PostMediaButtonsPro
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 cursor-not-allowed"
-            disabled
+            className="text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+            onClick={() => setShowLinkInput(!showLinkInput)}
           >
             <Link2 className="w-4 h-4 mr-1" />
             Link
@@ -57,10 +64,10 @@ export function PostMediaButtons({ onSubmit, isSubmitting }: PostMediaButtonsPro
 
         <Button
           onClick={onSubmit}
-          disabled
-          className="bg-gray-300 text-gray-500 cursor-not-allowed font-poppins"
+          disabled={isSubmitting}
+          className="bg-primary hover:bg-primary/90 text-white font-poppins"
         >
-          Share Post
+          {isSubmitting ? "Sharing..." : "Share Post"}
         </Button>
       </div>
 

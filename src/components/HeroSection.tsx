@@ -24,10 +24,10 @@ const HeroSection = () => {
           
           <Link to="/signup">
             <button 
-              className="w-72 h-24 text-white text-lg font-semibold rounded-[9px] border border-[#7E7474] shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="w-72 h-24 text-white text-lg font-medium rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out"
               style={{
-                background: 'linear-gradient(90deg, #9ED9C1 2.88%, #B0A8B9 66.35%)',
-                borderWidth: '0.9px'
+                background: 'linear-gradient(to right, #A68AE6, #C3E8DE)',
+                borderRadius: '999px'
               }}
             >
               Get Started

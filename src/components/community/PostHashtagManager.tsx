@@ -64,9 +64,8 @@ export function PostHashtagManager({
           onChange={(e) => setHashtagInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleAddHashtag()}
           className="flex-1 h-9 text-sm"
-          disabled
         />
-        <Button size="sm" onClick={handleAddHashtag} disabled>
+        <Button size="sm" onClick={handleAddHashtag}>
           Add
         </Button>
       </div>

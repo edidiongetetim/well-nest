@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CreatePostFormProps {
   title: string;
@@ -12,12 +13,14 @@ interface CreatePostFormProps {
 }
 
 export function CreatePostForm({ title, setTitle, content, setContent }: CreatePostFormProps) {
+  const { user } = useAuth();
+
   return (
     <div className="flex items-start gap-4">
       <Avatar className="w-12 h-12">
         <AvatarImage src="/placeholder.svg" alt="Your avatar" />
         <AvatarFallback className="bg-purple-100 text-purple-600">
-          You
+          {user?.email?.charAt(0).toUpperCase() || "U"}
         </AvatarFallback>
       </Avatar>
       
@@ -27,7 +30,6 @@ export function CreatePostForm({ title, setTitle, content, setContent }: CreateP
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="border-0 bg-gray-50 font-poppins text-lg placeholder:text-gray-400"
-          disabled
         />
         
         <Textarea
@@ -35,7 +37,6 @@ export function CreatePostForm({ title, setTitle, content, setContent }: CreateP
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="border-0 bg-gray-50 resize-none font-poppins placeholder:text-gray-400 min-h-[100px]"
-          disabled
         />
       </div>
     </div>
