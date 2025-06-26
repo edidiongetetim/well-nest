@@ -109,7 +109,7 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
         }}
       >
         <div className="relative p-6 sm:p-8 space-y-6">
-          {/* Header with close button */}
+          {/* Header with single close button */}
           <div className="flex items-center justify-between">
             <h2 className="font-poppins font-semibold text-xl text-gray-900">
               Create Post
@@ -118,7 +118,7 @@ export function ExpandedPostModal({ isOpen, onClose, onPostCreated }: ExpandedPo
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="rounded-full h-8 w-8 p-0 hover:bg-gray-100 hover:scale-105 transition-all duration-200"
+              className="absolute top-4 right-4 rounded-full h-8 w-8 p-0 hover:bg-gray-100 hover:scale-105 transition-all duration-200"
               aria-label="Close"
             >
               <X className="w-4 h-4" />

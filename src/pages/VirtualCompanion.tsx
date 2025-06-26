@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, Bot, User, Heart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { NestieIntelligentService } from "@/services/nestieIntelligentService";
 
 interface Message {
   id: string;
@@ -21,7 +22,7 @@ const VirtualCompanion = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm Nestie, your compassionate virtual companion. I'm here to support you through your wellness journey. I can help you understand your health data, remind you about appointments, and provide emotional support. How are you feeling today? 💜",
+      text: "Hello! I'm Nestie, your compassionate virtual companion. I'm here to support you through your wellness journey. I can help you understand your health data, check your reminders, and provide emotional support. How are you feeling today? 💜",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -47,7 +48,6 @@ const VirtualCompanion = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        // Provide a response even without authentication
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
           text: "I'd love to help you, but you'll need to sign in first so I can provide personalized support. Once you're signed in, I can access your health data and give you better guidance! 💜",
@@ -58,24 +58,33 @@ const VirtualCompanion = () => {
         return;
       }
 
-      console.log('Sending message to Nestie:', inputText);
-      const response = await supabase.functions.invoke('nestie-chat', {
-        body: {
-          message: inputText,
-          userId: user.id
+      console.log('Processing message with intelligent service:', inputText);
+      
+      // Try intelligent response first
+      let responseText = "";
+      try {
+        responseText = await NestieIntelligentService.getIntelligentResponse(inputText, user.id);
+      } catch (intelligentError) {
+        console.error('Intelligent service failed, falling back to regular chat:', intelligentError);
+        
+        // Fallback to regular Nestie chat
+        try {
+          const response = await supabase.functions.invoke('nestie-chat', {
+            body: {
+              message: inputText,
+              userId: user.id
+            }
+          });
+
+          if (response.data && response.data.response) {
+            responseText = response.data.response;
+          } else {
+            throw new Error('No response from chat service');
+          }
+        } catch (chatError) {
+          console.error('Chat service also failed:', chatError);
+          responseText = "I'm here for you! While I'm having some technical difficulties right now, I want you to know that your wellness journey matters. Please check your dashboard for your latest health information, and remember that it's okay to reach out for support when you need it. 💜";
         }
-      });
-
-      console.log('Nestie response:', response);
-
-      // Always try to get a response, even if there are errors
-      let responseText = "I'm here for you! While I'm having some technical difficulties right now, I want you to know that your wellness journey matters. Please check your dashboard for your latest health information, and remember that it's okay to reach out for support when you need it. 💜";
-
-      if (response.data && response.data.response) {
-        responseText = response.data.response;
-      } else if (response.error) {
-        console.error('Supabase function error:', response.error);
-        responseText = "Thank you for reaching out! I'm experiencing some technical issues right now, but I'm still here to support you. Would you like to check your health dashboard or talk about how you're feeling today? Remember, you're not alone in this journey. 💜";
       }
 
       const botMessage: Message = {
@@ -89,7 +98,6 @@ const VirtualCompanion = () => {
     } catch (error) {
       console.error('Error communicating with Nestie:', error);
       
-      // Always provide a supportive response
       const supportiveMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "I'm here for you, even though I'm having some connection issues right now. Your wellness and feelings matter to me. While I work on getting back to full capacity, please remember to take care of yourself and don't hesitate to reach out to someone you trust if you need support. 💜",
@@ -141,12 +149,12 @@ const VirtualCompanion = () => {
                       <span>Nestie</span>
                       <div className="flex items-center gap-1 text-sm font-normal text-gray-600">
                         <Sparkles className="w-3 h-3" />
-                        Your Compassionate AI Companion
+                        Your Intelligent AI Companion
                       </div>
                     </div>
                   </CardTitle>
                   <p className="font-poppins text-gray-600">
-                    Supporting you through your wellness journey with personalized insights and care
+                    Supporting you with personalized insights, health analysis, and care
                   </p>
                 </CardHeader>
                 
@@ -236,7 +244,7 @@ const VirtualCompanion = () => {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        placeholder="Share how you're feeling or ask about your health data..."
+                        placeholder="Ask about your health, reminders, or share how you're feeling..."
                         className="font-poppins"
                         disabled={isLoading}
                       />
@@ -249,7 +257,7 @@ const VirtualCompanion = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-2 font-poppins">
-                      💜 Nestie is here to support you, even when experiencing technical difficulties
+                      💜 Nestie can analyze your health data and provide intelligent insights
                     </p>
                   </div>
                 </CardContent>
