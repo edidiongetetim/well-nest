@@ -1,14 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { HealthSummaryCard } from "@/components/HealthSummaryCard";
-import { PregnancyTracker } from "@/components/PregnancyTracker";
 import { EnhancedReminderCard } from "@/components/EnhancedReminderCard";
 import { MeditationCard } from "@/components/MeditationCard";
 import { DynamicGreeting } from "@/components/DynamicGreeting";
-import { BabyMilestoneCard } from "@/components/BabyMilestoneCard";
+import { BabyProgressCard } from "@/components/BabyProgressCard";
 import { WellnessCards } from "@/components/WellnessCards";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,23 +121,21 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between mb-6">
                       <div>
                         <h2 className="font-poppins font-bold text-2xl text-primary mb-2">
-                          6 January
+                          {format(new Date(), 'd MMMM')}
                         </h2>
                         <p className="font-poppins text-lg text-gray-700 mb-2">
-                          16 weeks, 2 days
+                          Your Pregnancy Journey
                         </p>
                         <p className="font-poppins text-sm text-gray-500">
-                          Childbirth: 176 days left
+                          Track your progress and baby's development
                         </p>
                       </div>
-                      
-                      <BabyMilestoneCard />
                     </div>
                   </div>
                 </div>
                 
                 <div>
-                  <PregnancyTracker />
+                  <BabyProgressCard />
                 </div>
               </div>
 
