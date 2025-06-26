@@ -73,32 +73,43 @@ export function EnhancedCommunityFeed({ feedType, refreshTrigger }: EnhancedComm
 
   const fetchPosts = async () => {
     try {
-      let query = supabase
+      // First fetch posts
+      const { data: postsData, error: postsError } = await supabase
         .from("posts")
-        .select(`
-          *,
-          profiles:user_id (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select("*")
         .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .limit(20);
 
-      // TODO: Implement different filtering logic based on feedType
-      // For now, we'll show all public posts
-      
-      const { data, error } = await query;
-      if (error) throw error;
+      if (postsError) throw postsError;
 
-      setPosts(data || []);
-      
-      // Fetch user reactions and saves
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await fetchUserInteractions(user.id, data || []);
+      // Then fetch profiles for the post authors
+      if (postsData && postsData.length > 0) {
+        const userIds = postsData.map(post => post.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name, avatar_url")
+          .in("id", userIds);
+
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+        }
+
+        // Combine posts with profile data
+        const postsWithProfiles = postsData.map(post => ({
+          ...post,
+          profiles: profilesData?.find(profile => profile.id === post.user_id) || null
+        }));
+
+        setPosts(postsWithProfiles);
+        
+        // Fetch user interactions
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await fetchUserInteractions(user.id, postsWithProfiles);
+        }
+      } else {
+        setPosts([]);
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
