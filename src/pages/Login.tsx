@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,14 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      console.log('Attempting email/password login...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Login error:', error);
         toast({
           title: "Login Failed",
           description: error.message,
@@ -37,6 +40,7 @@ const Login = () => {
       }
 
       if (data.user) {
+        console.log('Login successful:', data.user);
         toast({
           title: "Welcome back!",
           description: "You have been successfully logged in.",
@@ -44,6 +48,7 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (error) {
+      console.error('Unexpected login error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -58,24 +63,33 @@ const Login = () => {
     setIsGoogleLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Attempting Google OAuth login...');
+      console.log('Current origin:', window.location.origin);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/onboarding`
         }
       });
 
+      console.log('Google OAuth response:', { data, error });
+
       if (error) {
+        console.error('Google sign in error:', error);
         toast({
           title: "Google Sign In Failed",
-          description: error.message,
+          description: `Error: ${error.message}. Please check that Google OAuth is properly configured in Supabase.`,
           variant: "destructive",
         });
+      } else {
+        console.log('Google OAuth initiated successfully');
       }
     } catch (error) {
+      console.error('Unexpected Google sign in error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred with Google sign in. Please try again.",
         variant: "destructive",
       });
     } finally {
