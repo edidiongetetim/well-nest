@@ -51,14 +51,14 @@ export function AppSidebar() {
     <Sidebar className="border-r border-gray-200">
       <SidebarContent className="bg-gray-50">
         <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
+          <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
             <img 
               src="/lovable-uploads/91d2546c-bdfa-484f-989a-fb228fba05f8.png" 
               alt="WellNest Logo" 
               className="w-10 h-10 object-contain"
             />
             <span className="text-xl font-bold text-primary font-poppins">WellNest</span>
-          </div>
+          </Link>
           
           <SidebarGroup>
             <SidebarGroupContent>
