@@ -132,11 +132,8 @@ export function DashboardHeader() {
                   onClick={() => handleMobileNavClick(item.path)}
                   className="w-full flex items-center gap-4 p-4 rounded-xl bg-gray-50 hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-all duration-200 text-left"
                 >
-                  <span className="text-2xl">{item.emoji}</span>
-                  <div className="flex items-center gap-3">
-                    <item.icon className="h-5 w-5 text-purple-600" />
-                    <span className="font-medium text-gray-800 font-poppins">{item.label}</span>
-                  </div>
+                  <item.icon className="h-6 w-6 text-purple-600" />
+                  <span className="font-medium text-gray-800 font-poppins">{item.label}</span>
                 </button>
               ))}
             </div>

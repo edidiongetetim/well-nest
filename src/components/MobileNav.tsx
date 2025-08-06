@@ -59,11 +59,11 @@ const MobileNav = () => {
             </Link>
             
             <div className="pt-6 border-t border-gray-200">
-              <Link to="/login" onClick={handleLinkClick}>
+              <Link to="/dashboard" onClick={handleLinkClick}>
                 <Button 
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3"
                 >
-                  Login/SignUp
+                  Get Started
                 </Button>
               </Link>
             </div>

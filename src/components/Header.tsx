@@ -56,9 +56,9 @@ const Header = () => {
             >
               About
             </Link>
-            <Link to="/login">
+            <Link to="/dashboard">
               <Button variant="outline" className="border-purple-200 text-purple-800 hover:bg-purple-50 transition-all duration-300 ease-in-out">
-                Login/SignUp
+                Get Started
               </Button>
             </Link>
           </div>

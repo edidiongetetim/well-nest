@@ -23,7 +23,7 @@ const HeroSection = () => {
           </div>
           
           <div className="mt-6">
-            <Link to="/signup">
+            <Link to="/dashboard">
               <button 
                 className="text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:brightness-110 hover:scale-105 transition-all duration-300 ease-in-out transform text-lg px-8 py-4 sm:text-base sm:px-6 sm:py-3"
                 style={{
